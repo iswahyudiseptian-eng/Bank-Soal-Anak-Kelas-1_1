@@ -1033,7 +1033,436 @@
             sessionData: {
                 subjectId: 'matematika',
                 roomCode: 'KELAS1',
-// ... existing code ... -->
+                childName: DEFAULT_CHILD_NAME,
+                activeQuestionIndex: 0,
+                answers: {},
+                score: 0,
+                correctCount: 0,
+                wrongCount: 0,
+                helpRequest: null,
+                updatedAt: Date.now()
+            }
+        };
+
+        function getSubjectMeta(subjId) {
+            return SUBJECT_LIST.find(s => s.id === subjId) || SUBJECT_LIST[0];
+        }
+
+        function getActiveQuestions() {
+            const subjId = state.sessionData.subjectId || state.selectedSubject;
+            return SUBJECT_QUESTIONS[subjId] || SUBJECT_QUESTIONS.matematika;
+        }
+
+        function getStorageKey(room, subjId) {
+            return `paket11_sd1_${room}_${subjId}`;
+        }
+
+        function loadLocalSession(room, subjId) {
+            try {
+                const raw = localStorage.getItem(getStorageKey(room, subjId));
+                if (raw) {
+                    return JSON.parse(raw);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveLocalSession(room, subjId, data) {
+            try {
+                localStorage.setItem(getStorageKey(room, subjId), JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            if (window.__toastTimer) clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => toast.classList.add('opacity-0'), 2800);
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '-';
+            try {
+                const d = new Date(ts);
+                return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } catch (e) {
+                return '-';
+            }
+        }
+
+        // =========================================================================
+        // LOGIKA UTAMA APLIKASI
+        // =========================================================================
+        window.app = {
+            init() {
+                lucide.createIcons();
+                this.populateParentDropdown();
+
+                const params = new URLSearchParams(window.location.search);
+                const paramRoom = params.get('room');
+                const paramRole = params.get('role');
+                const paramSubject = params.get('subject');
+
+                if (paramSubject && SUBJECT_QUESTIONS[paramSubject]) {
+                    state.selectedSubject = paramSubject;
+                }
+
+                if (paramRoom) {
+                    const cleanRoom = paramRoom.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+                    document.getElementById('input-room-code').value = cleanRoom || 'KELAS1';
+                } else {
+                    document.getElementById('input-room-code').value = 'KELAS1';
+                }
+
+                this.renderSubjectCards();
+                this.updateHomeSubjectLabels();
+
+                if (paramRole === 'anak' || paramRole === 'child') {
+                    this.startSession('anak');
+                } else if (paramRole === 'ortu' || paramRole === 'parent') {
+                    this.startSession('ortu');
+                } else {
+                    this.showView('view-home');
+                }
+            },
+
+            populateParentDropdown() {
+                const select = document.getElementById('parent-subject-dropdown');
+                if (!select) return;
+                select.innerHTML = '';
+                SUBJECT_LIST.forEach(subj => {
+                    const opt = document.createElement('option');
+                    opt.value = subj.id;
+                    opt.textContent = `${subj.num}. ${subj.icon} ${subj.name} (30 Soal)`;
+                    select.appendChild(opt);
+                });
+            },
+
+            renderSubjectCards() {
+                const grid = document.getElementById('subject-selector-grid');
+                if (!grid) return;
+                grid.innerHTML = '';
+
+                SUBJECT_LIST.forEach(subj => {
+                    const isSelected = subj.id === state.selectedSubject;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = isSelected
+                        ? 'p-3 sm:p-3.5 rounded-2xl border-2 border-indigo-600 bg-indigo-50 ring-2 ring-indigo-300 text-left transition flex items-start gap-2.5 shadow-sm'
+                        : 'p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 text-left transition flex items-start gap-2.5';
+
+                    btn.onclick = () => {
+                        soundFX.playClick();
+                        state.selectedSubject = subj.id;
+                        this.renderSubjectCards();
+                        this.updateHomeSubjectLabels();
+                    };
+
+                    btn.innerHTML = `
+                        <span class="text-2xl shrink-0 mt-0.5">${subj.icon}</span>
+                        <div class="min-w-0 flex-grow">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-[11px] font-extrabold text-indigo-600">Mapel ${subj.num}</span>
+                                ${isSelected ? '<span class="text-[10px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-md">Dipilih</span>' : ''}
+                            </div>
+                            <p class="font-kids font-bold text-sm sm:text-base text-slate-800 leading-tight truncate">${subj.name}</p>
+                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">${subj.desc}</p>
+                        </div>
+                    `;
+                    grid.appendChild(btn);
+                });
+            },
+
+            updateHomeSubjectLabels() {
+                const meta = getSubjectMeta(state.selectedSubject);
+                const subEl = document.getElementById('home-btn-child-sub');
+                if (subEl) {
+                    subEl.textContent = `Kerjakan 30 soal ${meta.name}`;
+                }
+            },
+
+            generateNewCodeInput() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = '';
+                for (let i = 0; i < 6; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                document.getElementById('input-room-code').value = code;
+            },
+
+            getCurrentFormValues() {
+                const rawRoom = document.getElementById('input-room-code').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const room = rawRoom.length >= 2 ? rawRoom : 'KELAS1';
+                return { room, name: DEFAULT_CHILD_NAME, subjectId: state.selectedSubject };
+            },
+
+            copyTextToClipboard(text) {
+                try {
+                    const temp = document.createElement('input');
+                    temp.value = text;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                } catch (e) {}
+            },
+
+            copyRoomCode() {
+                this.copyTextToClipboard(state.roomCode);
+                showToast(`Kode Sesi "${state.roomCode}" disalin!`);
+            },
+
+            copyDirectLink(targetRole) {
+                const room = state.role ? state.roomCode : this.getCurrentFormValues().room;
+                const subjId = state.role ? (state.sessionData.subjectId || state.selectedSubject) : state.selectedSubject;
+                const baseUrl = window.location.href.split('?')[0];
+                const shareUrl = `${baseUrl}?role=${targetRole}&room=${encodeURIComponent(room)}&subject=${encodeURIComponent(subjId)}`;
+
+                this.copyTextToClipboard(shareUrl);
+                const meta = getSubjectMeta(subjId);
+                const label = targetRole === 'anak' ? 'Tab Anak' : 'HP Orang Tua';
+                showToast(`Tautan ${label} (${meta.name} • Sesi: ${room}) disalin!`);
+            },
+
+            openQrModal(targetRole = 'anak') {
+                const room = state.role ? state.roomCode : this.getCurrentFormValues().room;
+                const subjId = state.role ? (state.sessionData.subjectId || state.selectedSubject) : state.selectedSubject;
+                const meta = getSubjectMeta(subjId);
+                const baseUrl = window.location.href.split('?')[0];
+                const shareUrl = `${baseUrl}?role=${targetRole}&room=${encodeURIComponent(room)}&subject=${encodeURIComponent(subjId)}`;
+
+                state.currentQrUrl = shareUrl;
+                document.getElementById('qr-session-badge').textContent = `${meta.name} • ${room}`;
+                document.getElementById('qr-url-preview').textContent = shareUrl;
+
+                const container = document.getElementById('qr-code-container');
+                container.innerHTML = '';
+
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(container, {
+                        text: shareUrl,
+                        width: 200,
+                        height: 200,
+                        colorDark: '#1e1b4b',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-xs text-rose-500 font-bold p-4">Gagal memuat generator QR Code.</p>';
+                }
+
+                document.getElementById('qr-modal').classList.remove('hidden');
+                lucide.createIcons();
+            },
+
+            closeQrModal() {
+                document.getElementById('qr-modal').classList.add('hidden');
+            },
+
+            copyQrUrl() {
+                if (!state.currentQrUrl) return;
+                this.copyTextToClipboard(state.currentQrUrl);
+                showToast('Tautan dari QR Code berhasil disalin!');
+            },
+
+            showView(viewId) {
+                ['view-home', 'view-child', 'view-parent'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(viewId).classList.remove('hidden');
+
+                const headerControls = document.getElementById('header-controls');
+                const subjBadge = document.getElementById('header-subject-badge');
+
+                if (viewId === 'view-child' || viewId === 'view-parent') {
+                    headerControls.classList.remove('hidden');
+                    const meta = getSubjectMeta(state.sessionData.subjectId || state.selectedSubject);
+                    subjBadge.textContent = `${meta.icon} ${meta.name}`;
+                    subjBadge.classList.remove('hidden');
+                    document.getElementById('header-room-code').textContent = state.roomCode;
+                    document.getElementById('switch-role-text').textContent =
+                        viewId === 'view-child' ? 'Mode Orang Tua' : 'Mode Anak';
+                } else {
+                    headerControls.classList.add('hidden');
+                    subjBadge.classList.add('hidden');
+                }
+                lucide.createIcons();
+            },
+
+            requestGoHome() {
+                if (state.role === 'anak') {
+                    this.openPinModal(() => {
+                        this.cleanupConnections();
+                        state.role = null;
+                        this.renderSubjectCards();
+                        this.showView('view-home');
+                    });
+                } else {
+                    this.cleanupConnections();
+                    state.role = null;
+                    this.renderSubjectCards();
+                    this.showView('view-home');
+                }
+            },
+
+            handleRoleSwitchClick() {
+                if (state.role === 'anak') {
+                    this.openPinModal(() => {
+                        this.startSession('ortu');
+                    });
+                } else {
+                    this.startSession('anak');
+                }
+            },
+
+            openPinModal(callback) {
+                state.pinActionCallback = callback;
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-error').classList.add('hidden');
+                document.getElementById('pin-modal').classList.remove('hidden');
+                setTimeout(() => document.getElementById('pin-input').focus(), 100);
+            },
+
+            closePinModal() {
+                document.getElementById('pin-modal').classList.add('hidden');
+                state.pinActionCallback = null;
+            },
+
+            verifyPin() {
+                const entered = document.getElementById('pin-input').value.trim();
+                if (entered === PARENT_PIN) {
+                    const cb = state.pinActionCallback;
+                    this.closePinModal();
+                    if (cb) cb();
+                } else {
+                    document.getElementById('pin-error').classList.remove('hidden');
+                }
+            },
+
+            // =====================================================================
+            // MANAJEMEN SESI & KONEKSI REAL-TIME (PEERJS + BROADCAST + STORAGE)
+            // =====================================================================
+            cleanupConnections() {
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+                if (state.reconnectTimer) {
+                    clearInterval(state.reconnectTimer);
+                    state.reconnectTimer = null;
+                }
+                if (state.parentConn) {
+                    try { state.parentConn.close(); } catch (e) {}
+                    state.parentConn = null;
+                }
+                state.connections.forEach(conn => {
+                    try { conn.close(); } catch (e) {}
+                });
+                state.connections = [];
+                if (state.peer) {
+                    try { state.peer.destroy(); } catch (e) {}
+                    state.peer = null;
+                }
+                if (state.broadcastChannel) {
+                    try { state.broadcastChannel.close(); } catch (e) {}
+                    state.broadcastChannel = null;
+                }
+                state.isPeerConnected = false;
+            },
+
+            updateConnectionUI(connected, labelText) {
+                state.isPeerConnected = connected;
+                const badge = document.getElementById('conn-badge');
+                const dot = document.getElementById('conn-dot');
+                const text = document.getElementById('conn-text');
+
+                if (badge && dot) {
+                    if (connected) {
+                        badge.className = 'bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-emerald-800';
+                        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping';
+                    } else {
+                        badge.className = 'bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-amber-800';
+                        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse';
+                    }
+                }
+                if (text) text.textContent = labelText;
+
+                if (state.role === 'ortu') {
+                    const ping = document.getElementById('parent-live-ping');
+                    const pDot = document.getElementById('parent-live-dot');
+                    const pill = document.getElementById('parent-status-pill');
+
+                    if (ping && pDot && pill) {
+                        if (connected) {
+                            ping.classList.remove('hidden');
+                            pDot.className = 'absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full';
+                            pill.className = 'bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full';
+                            pill.textContent = '● TERHUBUNG REAL-TIME';
+                        } else {
+                            ping.classList.add('hidden');
+                            pDot.className = 'absolute -top-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full';
+                            pill.className = 'bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full';
+                            pill.textContent = '● MENUNGGU TAB ANAK ONLINE';
+                        }
+                    }
+                }
+            },
+
+            canUseExternalWebSocket() {
+                try {
+                    if (window.self !== window.top && window.location.protocol === 'about:') {
+                        return false;
+                    }
+                    return typeof WebSocket !== 'undefined';
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            loadOrCreateSubjectSession(room, subjId, childName) {
+                const saved = loadLocalSession(room, subjId);
+                if (saved && saved.roomCode === room && saved.subjectId === subjId) {
+                    saved.childName = DEFAULT_CHILD_NAME;
+                    return saved;
+                }
+                const fresh = {
+                    subjectId: subjId,
+                    roomCode: room,
+                    childName: DEFAULT_CHILD_NAME,
+                    activeQuestionIndex: 0,
+                    answers: {},
+                    score: 0,
+                    correctCount: 0,
+                    wrongCount: 0,
+                    helpRequest: null,
+                    updatedAt: Date.now()
+                };
+                saveLocalSession(room, subjId, fresh);
+                return fresh;
+            },
+
+            initChildPeerHost(room) {
+                const hostPeerId = `paket11-sd1-${room.toLowerCase()}-anak`;
+                this.updateConnectionUI(false, 'Menyiapkan Koneksi Sesi...');
+
+                if (typeof Peer === 'undefined' || !this.canUseExternalWebSocket()) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                    return;
+                }
+
+                try {
+                    const peer = new Peer(hostPeerId, { debug: 0 });
+                    state.peer = peer;
+
+                    peer.on('open', () => {
+                        this.updateConnectionUI(false, 'Siap Dipantau Orang Tua');
+                    });
+
+                    peer.on('connection', (conn) => {
+                        state.connections.push(conn);
+
                         conn.on('open', () => {
                             this.updateConnectionUI(true, 'Terhubung Real-Time ke HP Orang Tua');
                             showToast('👩🏻‍💼👨🏽‍💼 Orang Tua terhubung memantau!');
@@ -1044,7 +1473,58 @@
                         });
 
                         conn.on('data', (msg) => {
-// ... existing code ... -->
+                            this.handleIncomingMessage(msg, conn);
+                        });
+
+                        conn.on('close', () => {
+                            state.connections = state.connections.filter(c => c !== conn);
+                            if (state.connections.length === 0) {
+                                this.updateConnectionUI(false, 'Siap Dipantau Orang Tua');
+                            }
+                        });
+                    });
+
+                    peer.on('error', (err) => {
+                        if (err && err.type === 'unavailable-id') {
+                            try {
+                                const fallbackPeer = new Peer(undefined, { debug: 0 });
+                                state.peer = fallbackPeer;
+                            } catch (e) {}
+                            this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                        } else {
+                            this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                        }
+                    });
+                } catch (e) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                }
+            },
+
+            initParentPeerClient(room) {
+                const targetHostId = `paket11-sd1-${room.toLowerCase()}-anak`;
+                this.updateConnectionUI(false, 'Menunggu Perangkat Anak Online...');
+
+                if (typeof Peer === 'undefined' || !this.canUseExternalWebSocket()) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                    return;
+                }
+
+                try {
+                    const peer = new Peer(undefined, { debug: 0 });
+                    state.peer = peer;
+
+                    const connectToChild = () => {
+                        if (!state.peer || state.peer.destroyed || state.role !== 'ortu') return;
+                        if (state.parentConn && state.parentConn.open) return;
+
+                        if (state.parentConn) {
+                            try { state.parentConn.close(); } catch (e) {}
+                        }
+
+                        try {
+                            const conn = peer.connect(targetHostId, { reliable: true });
+                            state.parentConn = conn;
+
                             conn.on('open', () => {
                                 this.updateConnectionUI(true, 'Terhubung Real-Time ke Tab Anak');
                                 showToast('✅ Terhubung langsung ke perangkat anak!');
@@ -1052,7 +1532,50 @@
                             });
 
                             conn.on('data', (msg) => {
-// ... existing code ... -->
+                                this.handleIncomingMessage(msg, conn);
+                            });
+
+                            conn.on('close', () => {
+                                this.updateConnectionUI(false, 'Menunggu Perangkat Anak Online...');
+                            });
+
+                            conn.on('error', () => {
+                                this.updateConnectionUI(false, 'Menunggu Perangkat Anak Online...');
+                            });
+                        } catch (e) {
+                            this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                        }
+                    };
+
+                    peer.on('open', () => {
+                        connectToChild();
+                        state.reconnectTimer = setInterval(connectToChild, 3000);
+                    });
+
+                    peer.on('error', () => {
+                        this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                    });
+                } catch (e) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                }
+            },
+
+            startSession(role) {
+                this.cleanupConnections();
+                const { room, name, subjectId } = this.getCurrentFormValues();
+                state.roomCode = room;
+                state.role = role;
+                state.childName = name;
+                state.selectedSubject = subjectId;
+                state.sessionData = this.loadOrCreateSubjectSession(room, subjectId, name);
+
+                try {
+                    state.broadcastChannel = new BroadcastChannel(`paket11_bc_${room}`);
+                    state.broadcastChannel.onmessage = (event) => {
+                        this.handleIncomingMessage(event.data, null);
+                    };
+                } catch (e) {}
+
                 window.onstorage = (e) => {
                     if (state.role === 'anak' && e.key === `paket9_active_subj_${room}` && e.newValue) {
                         try {
@@ -1066,9 +1589,16 @@
                     }
                     const activeSubj = state.sessionData.subjectId || state.selectedSubject;
                     if (e.key === getStorageKey(room, activeSubj) && e.newValue) {
-// ... existing code ... -->
+                        try {
+                            const updated = JSON.parse(e.newValue);
+                            state.sessionData = updated;
+                            if (state.role === 'anak') this.renderChildView();
+                            if (state.role === 'ortu') this.renderParentView();
+                        } catch (err) {}
+                    }
+                };
+
                 if (role === 'anak') {
-                    // Kunci mapel awal sesuai pilihan / link QR Code tanpa ditimpa cache lama
                     this.showView('view-child');
                     this.renderChildView();
                     this.initChildPeerHost(room);
@@ -1080,7 +1610,74 @@
             },
 
             broadcastChildState() {
-// ... existing code ... -->
+                const subjId = state.sessionData.subjectId || state.selectedSubject;
+                state.sessionData.updatedAt = Date.now();
+                saveLocalSession(state.roomCode, subjId, state.sessionData);
+
+                const packet = {
+                    type: 'SYNC_STATE',
+                    payload: state.sessionData
+                };
+
+                state.connections.forEach(conn => {
+                    if (conn && conn.open) {
+                        try { conn.send(packet); } catch (e) {}
+                    }
+                });
+
+                if (state.broadcastChannel) {
+                    try { state.broadcastChannel.postMessage(packet); } catch (e) {}
+                }
+            },
+
+            sendCommandToChild(packet) {
+                let sentViaPeer = false;
+                if (state.parentConn && state.parentConn.open) {
+                    try {
+                        state.parentConn.send(packet);
+                        sentViaPeer = true;
+                    } catch (e) {}
+                }
+                if (state.broadcastChannel) {
+                    try { state.broadcastChannel.postMessage(packet); } catch (e) {}
+                }
+                if (packet && packet.type === 'CHANGE_SUBJECT' && packet.subjectId) {
+                    try {
+                        localStorage.setItem(`paket9_active_subj_${state.roomCode}`, JSON.stringify({
+                            subjectId: packet.subjectId,
+                            timestamp: packet.timestamp || Date.now()
+                        }));
+                    } catch (e) {}
+                }
+                return sentViaPeer;
+            },
+
+            applySubjectChangeOnChild(newSubjId, notifyUser = false) {
+                if (!SUBJECT_QUESTIONS[newSubjId]) return;
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+                state.selectedSubject = newSubjId;
+                state.celebrationShown = false;
+                this.closeCelebrationModal();
+                state.sessionData = this.loadOrCreateSubjectSession(state.roomCode, newSubjId, DEFAULT_CHILD_NAME);
+                this.showView('view-child');
+                this.renderChildView();
+                this.broadcastChildState();
+
+                if (notifyUser) {
+                    const meta = getSubjectMeta(newSubjId);
+                    soundFX.playAlert();
+                    showToast(`📚 Orang tua memilih mata pelajaran: ${meta.name}!`);
+                }
+            },
+
+            handleIncomingMessage(msg, conn) {
+                if (!msg || !msg.type) return;
+
+                if (state.role === 'anak') {
+                    if (msg.type === 'REQUEST_SYNC' && conn && conn.open) {
                         conn.send({ type: 'SYNC_STATE', payload: state.sessionData });
                     } else if (msg.type === 'STICKER') {
                         document.getElementById('modal-sticker-emoji').textContent = msg.emoji || '🌟';
@@ -1102,7 +1699,6 @@
                         const incomingSubj = msg.payload.subjectId;
                         const currentParentSubj = state.sessionData.subjectId || state.selectedSubject;
                         if (incomingSubj && SUBJECT_QUESTIONS[incomingSubj] && incomingSubj !== currentParentSubj) {
-                            // Ikuti mata pelajaran yang sedang aktif dikerjakan anak
                             state.selectedSubject = incomingSubj;
                         }
                         const prevHelpTs = state.sessionData.helpRequest?.timestamp || 0;
@@ -1112,7 +1708,329 @@
                         this.renderParentView();
 
                         const newHelp = state.sessionData.helpRequest;
-// ... existing code ... -->
+                        if (newHelp && newHelp.timestamp > prevHelpTs) {
+                            soundFX.playAlert();
+                            const banner = document.getElementById('parent-help-banner');
+                            document.getElementById('parent-help-detail').textContent =
+                                `${DEFAULT_CHILD_NAME} meminta bantuan pada Soal #${newHelp.questionNumber}!`;
+                            banner.classList.remove('hidden');
+                        }
+                    }
+                }
+            },
+
+            // =====================================================================
+            // FITUR INTERAKTIF MODE ANAK
+            // =====================================================================
+            renderChildView() {
+                const data = state.sessionData;
+                const subjId = data.subjectId || state.selectedSubject;
+                const meta = getSubjectMeta(subjId);
+                const questions = getActiveQuestions();
+
+                document.getElementById('child-subject-icon').textContent = meta.icon;
+                document.getElementById('child-subject-title').textContent = `${meta.num}. ${meta.name}`;
+                document.getElementById('child-display-name').textContent = DEFAULT_CHILD_NAME;
+
+                const answersMap = data.answers || {};
+                const answeredCount = Object.keys(answersMap).length;
+                const totalQ = questions.length;
+                const score = Math.round(((data.correctCount || 0) / totalQ) * 100);
+
+                document.getElementById('child-answered-progress').textContent = `Terjawab: ${answeredCount} dari ${totalQ} soal`;
+                document.getElementById('child-score-badge').textContent = `⭐ Nilai: ${score}`;
+                document.getElementById('child-progress-bar').style.width = `${Math.round((answeredCount / totalQ) * 100)}%`;
+
+                if (answeredCount === 0) {
+                    state.celebrationShown = false;
+                }
+
+                const finishContainer = document.getElementById('child-finish-container');
+                if (answeredCount === totalQ) {
+                    finishContainer.classList.remove('hidden');
+                    if (!state.celebrationShown) {
+                        state.celebrationShown = true;
+                        this.openCelebrationModal();
+                    }
+                } else {
+                    finishContainer.classList.add('hidden');
+                }
+
+                const qIdx = data.activeQuestionIndex || 0;
+                const q = questions[qIdx];
+                if (!q) return;
+
+                document.getElementById('q-category').textContent = q.category;
+                document.getElementById('q-number-badge').textContent = `Soal ${qIdx + 1} / ${totalQ}`;
+                document.getElementById('q-visual').textContent = q.visual;
+                document.getElementById('q-text').textContent = q.question;
+
+                const savedAns = answersMap[String(qIdx)];
+                const optionsContainer = document.getElementById('q-options');
+                optionsContainer.innerHTML = '';
+
+                const labels = ['A', 'B', 'C'];
+                const baseStyles = [
+                    'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-950',
+                    'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-950',
+                    'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-950'
+                ];
+
+                q.options.forEach((optText, optIdx) => {
+                    const btn = document.createElement('button');
+                    let styleClass = baseStyles[optIdx];
+
+                    if (savedAns) {
+                        btn.disabled = true;
+                        if (optIdx === q.correctIndex) {
+                            styleClass = 'bg-emerald-500 border-emerald-600 text-white ring-4 ring-emerald-200 cursor-not-allowed';
+                        } else if (optIdx === savedAns.selectedIndex && !savedAns.isCorrect) {
+                            styleClass = 'bg-rose-500 border-rose-600 text-white cursor-not-allowed';
+                        } else {
+                            styleClass = 'bg-slate-50 border-slate-200 text-slate-400 opacity-65 cursor-not-allowed';
+                        }
+                    } else {
+                        btn.onclick = () => this.selectChildOption(qIdx, optIdx);
+                    }
+
+                    btn.className = `btn-3d w-full p-4 sm:p-5 rounded-2xl border-2 font-kids text-lg sm:text-xl font-bold flex items-center gap-4 text-left transition ${styleClass}`;
+
+                    btn.innerHTML = `
+                        <span class="w-10 h-10 rounded-xl bg-white/90 text-slate-800 flex items-center justify-center text-lg font-extrabold shrink-0 shadow-xs">
+                            ${labels[optIdx]}
+                        </span>
+                        <span class="leading-snug flex-grow">${optText}</span>
+                        ${savedAns ? '<span class="text-xs bg-black/15 px-2.5 py-1 rounded-lg font-sans font-bold shrink-0">🔒 Terkunci</span>' : ''}
+                    `;
+                    optionsContainer.appendChild(btn);
+                });
+
+                const feedbackBox = document.getElementById('child-feedback-box');
+                const autoNextHint = document.getElementById('feedback-auto-next');
+                if (savedAns) {
+                    feedbackBox.classList.remove('hidden');
+                    if (savedAns.isCorrect) {
+                        feedbackBox.className = 'mt-5 p-4 rounded-2xl text-center animate-pop bg-emerald-50 border-2 border-emerald-200 text-emerald-800';
+                        document.getElementById('feedback-icon').textContent = '🌟';
+                        document.getElementById('feedback-title').textContent = 'Hebat! Jawabanmu Benar!';
+                        document.getElementById('feedback-desc').textContent = q.explanation;
+                    } else {
+                        feedbackBox.className = 'mt-5 p-4 rounded-2xl text-center animate-pop bg-rose-50 border-2 border-rose-200 text-rose-800';
+                        document.getElementById('feedback-icon').textContent = '💡';
+                        document.getElementById('feedback-title').textContent = `Jawaban yang tepat: ${labels[q.correctIndex]}. ${q.options[q.correctIndex]}`;
+                        document.getElementById('feedback-desc').textContent = q.explanation;
+                    }
+                    if (state.autoNextTimer) {
+                        autoNextHint.classList.remove('hidden');
+                    } else {
+                        autoNextHint.classList.add('hidden');
+                    }
+                } else {
+                    feedbackBox.classList.add('hidden');
+                    autoNextHint.classList.add('hidden');
+                }
+            },
+
+            selectChildOption(qIdx, selectedIdx) {
+                const answers = { ...(state.sessionData.answers || {}) };
+                if (answers[String(qIdx)]) return;
+
+                const questions = getActiveQuestions();
+                const q = questions[qIdx];
+                const isCorrect = selectedIdx === q.correctIndex;
+
+                if (isCorrect) soundFX.playCorrect();
+                else soundFX.playWrong();
+
+                answers[String(qIdx)] = {
+                    selectedIndex: selectedIdx,
+                    isCorrect: isCorrect,
+                    timestamp: Date.now()
+                };
+
+                let correctCount = 0;
+                let wrongCount = 0;
+                Object.values(answers).forEach(item => {
+                    if (item.isCorrect) correctCount++;
+                    else wrongCount++;
+                });
+
+                state.sessionData.answers = answers;
+                state.sessionData.correctCount = correctCount;
+                state.sessionData.wrongCount = wrongCount;
+                state.sessionData.score = Math.round((correctCount / questions.length) * 100);
+                state.sessionData.activeQuestionIndex = qIdx;
+
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+
+                const totalQ = questions.length;
+                if (Object.keys(answers).length < totalQ) {
+                    state.autoNextTimer = setTimeout(() => {
+                        state.autoNextTimer = null;
+                        let nextUnanswered = -1;
+                        for (let i = qIdx + 1; i < totalQ; i++) {
+                            if (!state.sessionData.answers[String(i)]) {
+                                nextUnanswered = i;
+                                break;
+                            }
+                        }
+                        if (nextUnanswered === -1) {
+                            for (let i = 0; i < totalQ; i++) {
+                                if (!state.sessionData.answers[String(i)]) {
+                                    nextUnanswered = i;
+                                    break;
+                                }
+                            }
+                        }
+                        if (nextUnanswered !== -1) {
+                            this.jumpToQuestion(nextUnanswered);
+                        }
+                    }, 1100);
+                }
+
+                this.renderChildView();
+                this.broadcastChildState();
+            },
+
+            jumpToQuestion(idx) {
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+                state.sessionData.activeQuestionIndex = idx;
+                this.renderChildView();
+                this.broadcastChildState();
+            },
+
+            sendHelpRequest() {
+                soundFX.playAlert();
+                const currentQNum = (state.sessionData.activeQuestionIndex || 0) + 1;
+                state.sessionData.helpRequest = {
+                    questionNumber: currentQNum,
+                    timestamp: Date.now()
+                };
+                this.broadcastChildState();
+                showToast(`🙋‍♂️ Permintaan bantuan untuk Soal #${currentQNum} dikirim ke Orang Tua!`);
+            },
+
+            executeResetOnChild() {
+                state.sessionData.activeQuestionIndex = 0;
+                state.sessionData.answers = {};
+                state.sessionData.score = 0;
+                state.sessionData.correctCount = 0;
+                state.sessionData.wrongCount = 0;
+                state.sessionData.helpRequest = null;
+                state.celebrationShown = false;
+                this.closeCelebrationModal();
+                this.renderChildView();
+                this.broadcastChildState();
+            },
+
+            openCelebrationModal() {
+                const meta = getSubjectMeta(state.sessionData.subjectId || state.selectedSubject);
+                const questions = getActiveQuestions();
+                const correct = state.sessionData.correctCount || 0;
+                const score = Math.round((correct / questions.length) * 100);
+                document.getElementById('celeb-subtitle').textContent = `Kamu telah menyelesaikan 30 soal ${meta.name}!`;
+                document.getElementById('celeb-score').textContent = score;
+                document.getElementById('celeb-detail').textContent = `Benar ${correct} dari ${questions.length} soal`;
+                document.getElementById('celebration-modal').classList.remove('hidden');
+                soundFX.playFanfare();
+            },
+
+            closeCelebrationModal() {
+                document.getElementById('celebration-modal').classList.add('hidden');
+            },
+
+            closeEncouragementModal() {
+                document.getElementById('encouragement-modal').classList.add('hidden');
+            },
+
+            // =====================================================================
+            // FITUR INTERAKTIF MODE ORANG TUA (REAL-TIME DASHBOARD)
+            // =====================================================================
+            renderAllSubjectsRecap() {
+                const container = document.getElementById('parent-all-subjects-recap');
+                const avgEl = document.getElementById('recap-average-score');
+                const roomBadgeEl = document.getElementById('recap-room-code');
+                if (!container) return;
+
+                if (roomBadgeEl) roomBadgeEl.textContent = state.roomCode;
+                container.innerHTML = '';
+
+                let totalScoreWorked = 0;
+                let workedSubjectsCount = 0;
+                const activeSubjId = state.sessionData.subjectId || state.selectedSubject;
+
+                SUBJECT_LIST.forEach(subj => {
+                    const totalQ = (SUBJECT_QUESTIONS[subj.id] || []).length || 30;
+                    const sData = (subj.id === activeSubjId)
+                        ? state.sessionData
+                        : loadLocalSession(state.roomCode, subj.id);
+
+                    const answersMap = (sData && sData.answers) ? sData.answers : {};
+                    const answeredCount = Object.keys(answersMap).length;
+                    const correctCount = (sData && sData.correctCount) ? sData.correctCount : 0;
+                    const wrongCount = (sData && sData.wrongCount) ? sData.wrongCount : 0;
+                    const score = answeredCount > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
+
+                    if (answeredCount > 0) {
+                        totalScoreWorked += score;
+                        workedSubjectsCount++;
+                    }
+
+                    let statusBadge = '<span class="bg-slate-100 text-slate-500 text-[11px] font-bold px-2 py-0.5 rounded-full">Belum Dikerjakan</span>';
+                    let scoreColor = 'text-slate-400';
+                    if (answeredCount === totalQ) {
+                        statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2 py-0.5 rounded-full">✅ Selesai (30/30)</span>';
+                        scoreColor = score >= 75 ? 'text-emerald-600' : 'text-amber-600';
+                    } else if (answeredCount > 0) {
+                        statusBadge = `<span class="bg-sky-100 text-sky-700 text-[11px] font-bold px-2 py-0.5 rounded-full">⏳ Proses (${answeredCount}/30)</span>`;
+                        scoreColor = 'text-sky-600';
+                    }
+
+                    const card = document.createElement('div');
+                    const isCurrent = subj.id === activeSubjId;
+                    card.className = isCurrent
+                        ? 'p-3.5 rounded-2xl border-2 border-indigo-400 bg-indigo-50/40 cursor-pointer transition hover:shadow-sm'
+                        : 'p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 hover:border-indigo-200 cursor-pointer transition hover:shadow-sm';
+                    card.onclick = () => {
+                        if (subj.id !== activeSubjId) {
+                            this.changeSubjectFromParent(subj.id);
+                        }
+                    };
+
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-xl shrink-0">${subj.icon}</span>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase">Mapel ${subj.num}</p>
+                                    <h4 class="font-kids font-bold text-sm text-slate-800 truncate">${subj.name}</h4>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="font-kids text-2xl font-bold ${scoreColor}">${score}</span>
+                                <span class="text-[10px] font-bold text-slate-400 block -mt-1">Nilai</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-200/70">
+                            <span class="font-bold text-slate-600">Benar: <b class="text-emerald-600">${correctCount}</b> • Salah: <b class="text-rose-500">${wrongCount}</b></span>
+                            ${statusBadge}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                if (avgEl) {
+                    const avg = workedSubjectsCount > 0 ? Math.round(totalScoreWorked / workedSubjectsCount) : 0;
+                    avgEl.textContent = `${avg} / 100 (${workedSubjectsCount}/11 Mapel)`;
+                }
+            },
+
             changeSubjectFromParent(newSubjId) {
                 if (!SUBJECT_QUESTIONS[newSubjId]) return;
                 const cmdTs = Date.now();
