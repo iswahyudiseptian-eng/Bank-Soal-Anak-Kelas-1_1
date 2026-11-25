@@ -1435,6 +1435,10 @@
                                 type: 'SYNC_STATE',
                                 payload: state.sessionData
                             });
+                            // Minta status mata pelajaran aktif dari Orang Tua jika ada
+                            conn.send({
+                                type: 'REQUEST_PARENT_SUBJECT'
+                            });
                         });
 
                         conn.on('data', (msg) => {
@@ -1663,7 +1667,7 @@
 
             applySubjectChangeOnChild(newSubjId, notify = true) {
                 if (!newSubjId || !SUBJECT_QUESTIONS[newSubjId]) return;
-                if (state.sessionData.subjectId === newSubjId && state.selectedSubject === newSubjId) return;
+                const isAlreadySame = (state.sessionData.subjectId === newSubjId && state.selectedSubject === newSubjId);
 
                 if (state.autoNextTimer) {
                     clearTimeout(state.autoNextTimer);
@@ -1677,7 +1681,7 @@
                 this.renderChildView();
                 this.broadcastChildState();
 
-                if (notify) {
+                if (notify && !isAlreadySame) {
                     const meta = getSubjectMeta(newSubjId);
                     showToast(`📚 Orang tua memilihkan mapel ${meta.name}!`);
                 }
@@ -1696,12 +1700,21 @@
                         soundFX.playFanfare();
                     } else if (msg.type === 'RESET_ALL') {
                         this.executeResetOnChild();
-                        showToast('🔄 Orang tua mereset latihan soal ini dari awal.');
+                        showToast('🔄 Orang tua mereset latihan soal dari awal.');
                     } else if (msg.type === 'CHANGE_SUBJECT' && msg.subjectId) {
                         this.applySubjectChangeOnChild(msg.subjectId, true);
                     }
                 } else if (state.role === 'ortu') {
-                    if (msg.type === 'SYNC_STATE' && msg.payload) {
+                    if (msg.type === 'REQUEST_PARENT_SUBJECT') {
+                        const activeSubj = state.sessionData.subjectId || state.selectedSubject;
+                        if (activeSubj) {
+                            this.sendCommandToChild({
+                                type: 'CHANGE_SUBJECT',
+                                subjectId: activeSubj,
+                                timestamp: Date.now()
+                            });
+                        }
+                    } else if (msg.type === 'SYNC_STATE' && msg.payload) {
                         const currentParentSubj = state.sessionData.subjectId || state.selectedSubject;
                         if (msg.payload.subjectId && msg.payload.subjectId !== currentParentSubj) {
                             this.sendCommandToChild({
@@ -2048,13 +2061,17 @@
                 this.renderParentView();
                 this.dismissHelpBanner();
 
-                this.sendCommandToChild({
+                const cmdPacket = {
                     type: 'CHANGE_SUBJECT',
                     subjectId: newSubjId,
                     timestamp: Date.now()
-                });
+                };
+                this.sendCommandToChild(cmdPacket);
+                // Kirim ulang singkat untuk memastikan paket diterima di koneksi P2P
+                setTimeout(() => this.sendCommandToChild(cmdPacket), 450);
+
                 const meta = getSubjectMeta(newSubjId);
-                showToast(`📚 Mata pelajaran diganti ke ${meta.name}!`);
+                showToast(`📚 Mata pelajaran di layar anak diganti ke ${meta.name}!`);
             },
 
             setParentFilter(filterType) {
