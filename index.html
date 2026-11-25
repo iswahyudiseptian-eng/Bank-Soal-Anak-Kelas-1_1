@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paket Lengkap 11 Mapel Kelas 1 SD - Pantau Real-Time</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PeerJS untuk Koneksi P2P Real-Time Lintas Perangkat (GitHub Pages Ready) -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    
+    <!-- QRCodeJS untuk Membuat QR Code Otomatis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .font-kids {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .btn-3d {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.14);
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.6); opacity: 0; }
+            75% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .bg-dots {
+            background-image: radial-gradient(#cbd5e1 1.8px, transparent 1.8px);
+            background-size: 24px 24px;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    </style>
+</head>
+<body class="bg-dots min-h-screen text-slate-800 flex flex-col">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b-2 border-indigo-200">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="app.requestGoHome()">
+                <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-sky-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md">
+                    🎓
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-kids font-bold text-lg sm:text-xl text-indigo-800 leading-tight">Latihan 11 Mapel Kelas 1</h1>
+                        <span id="header-subject-badge" class="hidden bg-indigo-100 text-indigo-700 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">MAPEL</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-semibold">330 Soal Interaktif (11 Mapel × 30 Soal) • Real-Time</p>
+                </div>
+            </div>
+
+            <!-- Kontrol Sesi, Indikator Koneksi & Switch Cepat -->
+            <div id="header-controls" class="hidden flex flex-wrap items-center gap-2 sm:gap-3">
+                <div id="conn-badge" class="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-amber-800">
+                    <span id="conn-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="conn-text">Menghubungkan...</span>
+                </div>
+
+                <div class="bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                    <span class="text-xs font-bold text-indigo-700 uppercase hidden sm:inline">Sesi:</span>
+                    <span id="header-room-code" class="font-kids font-bold text-sm sm:text-base text-indigo-900 tracking-wider">-----</span>
+                    <button onclick="app.copyRoomCode()" title="Salin Kode Sesi" class="text-indigo-700 hover:text-indigo-900 p-1 rounded-lg hover:bg-indigo-100 transition">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <button id="btn-switch-role" onclick="app.handleRoleSwitchClick()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs sm:text-sm px-3 py-2 rounded-xl flex items-center gap-1.5 transition">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-indigo-600"></i>
+                    <span id="switch-role-text">Mode Orang Tua</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 flex flex-col justify-center">
+
+        <!-- VIEW 1: BERANDA (PILIH 1 DARI 11 MATA PELAJARAN + SESI & QR CODE) -->
+        <div id="view-home" class="max-w-4xl mx-auto w-full">
+            <div class="bg-white rounded-3xl shadow-xl border-4 border-indigo-200 p-5 sm:p-8">
+                <div class="text-center mb-6">
+                    <div class="inline-block bg-indigo-100 text-indigo-700 font-extrabold text-xs px-3 py-1 rounded-full mb-2 uppercase tracking-wider">
+                        ✨ Lengkap 11 Mata Pelajaran Kelas 1 SD
+                    </div>
+                    <h2 class="font-kids text-2xl sm:text-3xl font-bold text-slate-800 mb-1">Pilih Mata Pelajaran & Mulai Latihan</h2>
+                    <p class="text-slate-600 text-xs sm:text-sm">
+                        Setiap mata pelajaran berisi <b>30 soal pilihan ganda</b>. Jawaban anak hanya bisa dipilih sekali, lanjut otomatis, dan dipantau real-time!
+                    </p>
+                </div>
+
+                <!-- Langkah 1: Grid 11 Mata Pelajaran -->
+                <div class="mb-6">
+                    <label class="block text-sm font-extrabold text-slate-700 mb-2.5">1. Pilih Mata Pelajaran (30 Soal / Mapel):</label>
+                    <div id="subject-selector-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                        <!-- Kartu 11 mapel dirender via JS -->
+                    </div>
+                </div>
+
+                <!-- Langkah 2: Form Nama, Kode Sesi, Link & QR Code -->
+                <div class="bg-indigo-50/70 rounded-2xl p-4 sm:p-5 mb-6 border-2 border-indigo-200 space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700">Kode Sesi (Room ID) • Siswa: <span class="text-indigo-700">Alvin</span></label>
+                            <button onclick="app.generateNewCodeInput()" class="text-xs font-bold text-indigo-700 hover:underline flex items-center gap-1">
+                                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Acak Kode
+                            </button>
+                        </div>
+                        <input type="text" id="input-room-code" placeholder="KELAS1" maxlength="8" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+                            class="w-full px-4 py-2.5 rounded-xl border-2 border-indigo-200 focus:border-indigo-500 focus:outline-none font-kids font-bold text-lg tracking-widest uppercase text-center text-indigo-900 bg-white">
+                    </div>
+
+                    <!-- Tombol Bagikan Link & QR Code -->
+                    <div class="pt-3 border-t border-indigo-200 flex flex-col sm:flex-row gap-2">
+                        <button onclick="app.copyDirectLink('anak')" class="flex-1 bg-white hover:bg-indigo-100 text-indigo-900 border border-indigo-300 font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                            <span>Salin Link Tab Anak</span>
+                        </button>
+                        <button onclick="app.openQrModal('anak')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs">
+                            <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                            <span>QR Code Tab Anak</span>
+                        </button>
+                        <button onclick="app.copyDirectLink('ortu')" class="flex-1 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                            <span>Link HP Orang Tua</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pilihan Mode -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button onclick="app.startSession('anak')" class="btn-3d bg-gradient-to-b from-indigo-500 to-sky-600 hover:from-indigo-600 hover:to-sky-700 text-white rounded-2xl p-5 flex flex-col items-center text-center border-2 border-indigo-300">
+                        <span class="text-4xl mb-2">👧🏽👦🏻</span>
+                        <span class="font-kids text-lg sm:text-xl font-bold leading-snug">Mulai sebagai Anak</span>
+                        <span id="home-btn-child-sub" class="text-xs text-indigo-100 mt-1">Kerjakan 30 soal Matematika</span>
+                    </button>
+
+                    <button onclick="app.startSession('ortu')" class="btn-3d bg-gradient-to-b from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl p-5 flex flex-col items-center text-center border-2 border-emerald-300">
+                        <span class="text-4xl mb-2">👩🏻‍💼👨🏽‍💼</span>
+                        <span class="font-kids text-lg sm:text-xl font-bold leading-snug">Masuk sebagai Orang Tua</span>
+                        <span class="text-xs text-emerald-100 mt-1">Pantau real-time, kunci jawaban & rekap nilai</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: MODE ANAK (FOKUS 1 KARTU SOAL, SEKALI PILIH OTOMATIS LANJUT) -->
+        <div id="view-child" class="hidden w-full space-y-5">
+            <!-- Bar Info, Progres & Tombol Minta Bantuan -->
+            <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-md border-2 border-indigo-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                    <div id="child-subject-icon" class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl shrink-0">
+                        🔢
+                    </div>
+                    <div>
+                        <p id="child-subject-title" class="text-xs font-extrabold text-indigo-600 uppercase">1. Matematika</p>
+                        <h3 id="child-display-name" class="font-kids text-lg font-bold text-slate-800">Alvin</h3>
+                    </div>
+                </div>
+
+                <!-- Progres Terjawab -->
+                <div class="flex-grow max-w-md w-full">
+                    <div class="flex justify-between text-xs font-bold text-slate-600 mb-1.5">
+                        <span id="child-answered-progress">Terjawab: 0 dari 30 soal</span>
+                        <span id="child-score-badge" class="text-amber-600 font-extrabold">⭐ Nilai: 0</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                        <div id="child-progress-bar" class="bg-gradient-to-r from-indigo-500 to-sky-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Tombol Minta Bantuan Orang Tua -->
+                <button id="btn-ask-help" onclick="app.sendHelpRequest()" class="btn-3d bg-amber-400 hover:bg-amber-500 text-slate-950 font-kids font-bold text-sm px-4 py-2.5 rounded-2xl flex items-center justify-center gap-2 shrink-0 border-2 border-amber-300">
+                    <span class="text-lg">🙋‍♂️</span>
+                    <span>Minta Bantuan Orang Tua</span>
+                </button>
+            </div>
+
+            <!-- Kartu Soal Utama Terpusat -->
+            <div class="max-w-3xl mx-auto w-full">
+                <div class="bg-white rounded-3xl shadow-xl border-4 border-indigo-200 p-5 sm:p-8">
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                        <span id="q-category" class="bg-indigo-100 text-indigo-800 font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-full">
+                            Topik Soal
+                        </span>
+                        <span id="q-number-badge" class="font-kids font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl text-base">
+                            Soal 1 / 30
+                        </span>
+                    </div>
+
+                    <!-- Kotak Visual Emoji / Ilustrasi -->
+                    <div id="q-visual" class="bg-gradient-to-b from-indigo-50 to-sky-50/70 border-2 border-dashed border-indigo-300 rounded-2xl p-4 sm:p-5 mb-5 text-center text-3xl sm:text-4xl font-kids font-bold text-indigo-950 tracking-wide select-none">
+                        🔢 ✨
+                    </div>
+
+                    <!-- Teks Pertanyaan -->
+                    <h2 id="q-text" class="font-kids text-xl sm:text-2xl font-bold text-slate-800 text-center mb-6 leading-snug">
+                        Pertanyaan soal...
+                    </h2>
+
+                    <!-- Pilihan Jawaban A, B, C -->
+                    <div id="q-options" class="space-y-3.5"></div>
+
+                    <!-- Kotak Umpan Balik Langsung Setelah Menjawab -->
+                    <div id="child-feedback-box" class="hidden mt-5 p-4 rounded-2xl text-center animate-pop">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <span id="feedback-icon" class="text-2xl">🌟</span>
+                            <h4 id="feedback-title" class="font-kids text-lg font-bold">Hebat Sekali!</h4>
+                        </div>
+                        <p id="feedback-desc" class="text-xs sm:text-sm font-semibold">Penjelasan singkat.</p>
+                        <p id="feedback-auto-next" class="hidden text-xs font-extrabold mt-2 uppercase tracking-wide opacity-80">⏭️ Pindah ke soal berikutnya...</p>
+                    </div>
+
+                    <!-- Tombol Lihat Hasil Akhir (Muncul hanya setelah 30 soal selesai) -->
+                    <div id="child-finish-container" class="hidden flex items-center justify-center mt-6 pt-5 border-t-2 border-slate-100">
+                        <button id="btn-finish-quiz" onclick="app.openCelebrationModal()" class="btn-3d bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-kids font-bold text-sm sm:text-base px-6 py-3 rounded-2xl flex items-center gap-1.5">
+                            <span>🏆 Lihat Hasil Akhir</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: MODE ORANG TUA (REAL-TIME DASHBOARD) -->
+        <div id="view-parent" class="hidden w-full space-y-6">
+            <!-- Banner Notifikasi Minta Bantuan dari Anak -->
+            <div id="parent-help-banner" class="hidden bg-amber-400 border-2 border-amber-500 text-slate-900 rounded-3xl p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 animate-pop">
+                <div class="flex items-center gap-3 text-center sm:text-left">
+                    <span class="text-4xl animate-bounce">🙋‍♂️</span>
+                    <div>
+                        <h3 class="font-kids text-lg font-bold">Anak Meminta Bantuan!</h3>
+                        <p id="parent-help-detail" class="text-sm font-bold text-slate-800">
+                            Anak membutuhkan bantuan pada Soal #1
+                        </p>
+                    </div>
+                </div>
+                <button onclick="app.dismissHelpBanner()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl shrink-0">
+                    Tandai Sudah Dibantu ✓
+                </button>
+            </div>
+
+            <!-- Header Status Anak Real-Time + Ganti Mapel Cepat -->
+            <div class="bg-white rounded-3xl shadow-md border-2 border-indigo-100 p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-start sm:items-center gap-4">
+                    <div class="relative shrink-0">
+                        <div id="parent-subject-icon" class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-3xl">
+                            🎓
+                        </div>
+                        <span id="parent-live-ping" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full animate-ping"></span>
+                        <span id="parent-live-dot" class="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full"></span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 id="parent-child-name" class="font-kids text-xl font-bold text-slate-800">Alvin</h2>
+                            <span id="parent-status-pill" class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                                ● MENUNGGU TAB ANAK
+                            </span>
+                        </div>
+                        <p id="parent-live-activity" class="text-sm font-bold text-indigo-700 mt-0.5">
+                            Menunggu perangkat anak terhubung...
+                        </p>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Mapel: <b id="parent-subject-name" class="text-slate-700">Matematika</b> • Sesi: <b id="parent-code-text" class="text-slate-700">-----</b> • Update: <span id="parent-last-update">-</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="app.openQrModal('anak')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-xs">
+                        <i data-lucide="qr-code" class="w-4 h-4"></i>
+                        <span>QR Code Anak</span>
+                    </button>
+                    <button onclick="app.copyDirectLink('anak')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition">
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                        <span>Salin Link Anak</span>
+                    </button>
+                    <button onclick="app.confirmResetSession()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Reset Jawaban Mapel Ini</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bar Ganti Mata Pelajaran dari Dashboard Orang Tua -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <span class="text-xs font-extrabold text-slate-600 uppercase flex items-center gap-1.5">
+                    <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Pilih / Ganti Mata Pelajaran (Otomatis Sinkron ke Layar Anak):</span>
+                </span>
+                <select id="parent-subject-dropdown" onchange="app.changeSubjectFromParent(this.value)"
+                    class="px-3.5 py-2 rounded-xl border-2 border-indigo-200 bg-indigo-50/60 font-bold text-sm text-indigo-900 focus:outline-none focus:border-indigo-500">
+                </select>
+            </div>
+
+            <!-- 4 Kartu Statistik Utama -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Nilai Sementara</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <p id="stat-score" class="font-kids text-3xl font-bold text-amber-500">0</p>
+                        <span class="text-xs font-bold text-slate-400">/ 100</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Progres Terjawab</p>
+                    <p id="stat-progress" class="font-kids text-3xl font-bold text-sky-600 mt-1">0 / 30</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Benar / Salah</p>
+                    <p class="font-kids text-2xl sm:text-3xl font-bold mt-1">
+                        <span id="stat-correct" class="text-emerald-500">0</span>
+                        <span class="text-slate-300 text-xl">/</span>
+                        <span id="stat-wrong" class="text-rose-500">0</span>
+                    </p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Posisi Soal Aktif</p>
+                    <p id="stat-active-q" class="font-kids text-3xl font-bold text-indigo-600 mt-1">No. 1</p>
+                </div>
+            </div>
+
+            <!-- Panel Kirim Stiker Penyemangat ke Layar Anak -->
+            <div class="bg-gradient-to-r from-indigo-600 to-sky-600 rounded-3xl p-5 sm:p-6 text-white shadow-lg">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h3 class="font-kids text-lg sm:text-xl font-bold flex items-center gap-2">
+                            <span>💌 Kirim Stiker Penyemangat ke Layar Anak</span>
+                        </h3>
+                        <p class="text-xs sm:text-sm text-indigo-100">
+                            Stiker langsung muncul sebagai pop-up ceria bersuara di perangkat anak!
+                        </p>
+                    </div>
+                    <span id="sticker-sent-badge" class="hidden bg-white text-indigo-700 px-3 py-1 rounded-full text-xs font-extrabold self-start sm:self-center">
+                        ✅ Stiker Terkirim ke Anak!
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <button onclick="app.sendEncouragement('Semangat Belajar! 🌟', '🌟')" class="bg-white/15 hover:bg-white/25 active:scale-95 transition rounded-2xl p-3 text-left flex items-center gap-2.5 border border-white/25">
+                        <span class="text-2xl">🌟</span>
+                        <span class="text-xs sm:text-sm font-bold leading-tight">Semangat Belajar!</span>
+                    </button>
+                    <button onclick="app.sendEncouragement('Anak Pintar & Hebat! 👏', '👏')" class="bg-white/15 hover:bg-white/25 active:scale-95 transition rounded-2xl p-3 text-left flex items-center gap-2.5 border border-white/25">
+                        <span class="text-2xl">👏</span>
+                        <span class="text-xs sm:text-sm font-bold leading-tight">Anak Pintar & Hebat!</span>
+                    </button>
+                    <button onclick="app.sendEncouragement('Juara Kelas 1! 🏆', '🏆')" class="bg-white/15 hover:bg-white/25 active:scale-95 transition rounded-2xl p-3 text-left flex items-center gap-2.5 border border-white/25">
+                        <span class="text-2xl">🏆</span>
+                        <span class="text-xs sm:text-sm font-bold leading-tight">Juara Kelas 1!</span>
+                    </button>
+                    <button onclick="app.sendEncouragement('Teliti Membaca Ya! 🎯', '🎯')" class="bg-white/15 hover:bg-white/25 active:scale-95 transition rounded-2xl p-3 text-left flex items-center gap-2.5 border border-white/25">
+                        <span class="text-2xl">🎯</span>
+                        <span class="text-xs sm:text-sm font-bold leading-tight">Teliti Membaca Ya!</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Daftar Rincian 30 Soal Real-Time + Kunci Jawaban -->
+            <div class="bg-white rounded-3xl shadow-md border border-slate-100 p-5 sm:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-kids text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i>
+                        <span id="parent-list-heading">Rincian 30 Soal (Live)</span>
+                    </h3>
+                    <div class="flex flex-wrap gap-1.5 text-xs font-bold">
+                        <button onclick="app.setParentFilter('all')" id="filter-all" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white">Semua (30)</button>
+                        <button onclick="app.setParentFilter('wrong')" id="filter-wrong" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Salah / Bimbingan</button>
+                        <button onclick="app.setParentFilter('correct')" id="filter-correct" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Benar</button>
+                        <button onclick="app.setParentFilter('unanswered')" id="filter-unanswered" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Belum Dijawab</button>
+                    </div>
+                </div>
+
+                <div id="parent-answers-list" class="space-y-2.5 max-h-[620px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- Rekap Nilai Akhir Masing-Masing 11 Mata Pelajaran (Di Bagian Akhir Mode Orang Tua) -->
+            <div class="bg-white rounded-3xl shadow-md border-2 border-indigo-100 p-5 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-kids text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span>📊 Rekap Nilai Akhir Masing-Masing Mata Pelajaran</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 font-semibold">
+                            Ringkasan nilai, progres terjawab, dan status selesai untuk ke-11 mata pelajaran pada Sesi <b id="recap-room-code" class="text-indigo-700">KELAS1</b>.
+                        </p>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 px-3.5 py-2 rounded-2xl text-right self-start sm:self-center">
+                        <p class="text-[11px] font-bold text-indigo-600 uppercase">Rata-Rata Mapel Dikerjakan</p>
+                        <p id="recap-average-score" class="font-kids text-xl font-bold text-indigo-900">0 / 100</p>
+                    </div>
+                </div>
+
+                <div id="parent-all-subjects-recap" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Kartu nilai masing-masing 11 mata pelajaran dirender di sini -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL PIN PENGAMAN ORANG TUA -->
+    <div id="pin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl border-4 border-indigo-200 shadow-2xl max-w-sm w-full p-6 text-center animate-pop">
+            <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">
+                🔒
+            </div>
+            <h3 class="font-kids text-xl font-bold text-slate-800 mb-1">Verifikasi Orang Tua</h3>
+            <p class="text-xs text-slate-500 mb-4">Masukkan PIN Orang Tua (Default: <b>1234</b>) untuk keluar dari Mode Anak atau membuka Dashboard.</p>
+            
+            <input type="password" id="pin-input" inputmode="numeric" maxlength="4" placeholder="••••"
+                class="w-40 mx-auto block px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none font-kids text-2xl tracking-widest text-center mb-2">
+            <p id="pin-error" class="hidden text-xs font-bold text-rose-500 mb-3">PIN salah! Coba masukkan 1234.</p>
+
+            <div class="flex gap-2.5 mt-4">
+                <button onclick="app.closePinModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm">
+                    Batal
+                </button>
+                <button onclick="app.verifyPin()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm">
+                    Buka Kunci
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP STIKER PENYEMANGAT DARI ORANG TUA -->
+    <div id="encouragement-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl border-4 border-amber-400 shadow-2xl max-w-sm w-full p-6 text-center animate-pop">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 inline-block px-3 py-1 rounded-full mb-2">
+                💌 Pesan dari Ayah / Bunda
+            </div>
+            <div id="modal-sticker-emoji" class="text-7xl my-3 animate-bounce">🌟</div>
+            <h3 id="modal-sticker-text" class="font-kids text-2xl font-bold text-slate-800 mb-5">
+                Semangat Belajar! 🌟
+            </h3>
+            <button onclick="app.closeEncouragementModal()" class="btn-3d w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-kids font-bold text-lg py-3 rounded-2xl">
+                Siap! Terima Kasih 😊
+            </button>
+        </div>
+    </div>
+
+    <!-- POP-UP PERAYAAN SELESAI 30 SOAL -->
+    <div id="celebration-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl border-4 border-emerald-400 shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-pop">
+            <div class="text-6xl mb-2 animate-bounce">🏆🎉</div>
+            <h2 class="font-kids text-2xl sm:text-3xl font-bold text-emerald-600 mb-1">Hebat Sekali!</h2>
+            <p id="celeb-subtitle" class="text-sm text-slate-600 mb-5">Kamu telah menyelesaikan semua 30 soal!</p>
+
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5 mb-5">
+                <p class="text-xs font-bold text-emerald-700 uppercase">Nilai Akhir Kamu</p>
+                <div id="celeb-score" class="font-kids text-5xl font-bold text-emerald-600 my-1">100</div>
+                <p id="celeb-detail" class="text-sm font-bold text-slate-700">Benar 30 dari 30 soal</p>
+            </div>
+
+            <button onclick="app.closeCelebrationModal()" class="btn-3d w-full bg-emerald-500 hover:bg-emerald-600 text-white font-kids font-bold text-lg py-3 rounded-2xl">
+                Selesai & Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI RESET JAWABAN -->
+    <div id="custom-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center animate-pop">
+            <div class="text-4xl mb-2">🔄</div>
+            <h3 class="font-kids text-xl font-bold text-slate-800 mb-2">Reset Jawaban Mapel Ini?</h3>
+            <p class="text-sm text-slate-600 mb-6">Semua jawaban dan skor anak untuk mata pelajaran ini akan dihapus dari awal secara real-time.</p>
+            <div class="flex gap-3">
+                <button onclick="app.closeCustomModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl">
+                    Batal
+                </button>
+                <button id="custom-modal-confirm-btn" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 rounded-xl">
+                    Ya, Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL QR CODE UNTUK SCAN PERANGKAT ANAK -->
+    <div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl border-4 border-indigo-300 shadow-2xl max-w-sm w-full p-6 text-center animate-pop">
+            <div class="inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-800 text-xs font-extrabold px-3 py-1 rounded-full mb-2">
+                <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                <span>Pindai (Scan) dari HP / Tab Anak</span>
+            </div>
+            <h3 id="qr-modal-title" class="font-kids text-xl font-bold text-slate-800 mb-1">QR Code Latihan Soal</h3>
+            <p class="text-xs text-slate-500 mb-4">
+                Arahkan kamera HP/Tablet anak ke QR Code ini untuk langsung membuka mata pelajaran terpilih.
+            </p>
+
+            <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-indigo-300 inline-flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <div id="qr-code-container"></div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-4">
+                <p class="text-[11px] font-bold text-slate-400 uppercase">Mapel & Kode Sesi</p>
+                <p id="qr-session-badge" class="font-kids text-base font-bold text-indigo-700 tracking-wide">Matematika • KELAS1</p>
+                <p id="qr-url-preview" class="text-[10px] text-slate-400 truncate mt-0.5"></p>
+            </div>
+
+            <div class="flex gap-2.5">
+                <button onclick="app.copyQrUrl()" class="flex-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span>Salin Link</span>
+                </button>
+                <button onclick="app.closeQrModal()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFIKASI -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-sm font-bold px-5 py-3 rounded-2xl shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 text-center max-w-xs sm:max-w-md">
+        Notifikasi
+    </div>
+
+    <script>
+        // =========================================================================
+        // METADATA 11 MATA PELAJARAN KELAS 1 SD
+        // =========================================================================
+        const SUBJECT_LIST = [
+            { id: 'matematika', num: 1, name: 'Matematika', icon: '🔢', color: 'sky', desc: 'Bilangan 1–20, penjumlahan, pengurangan & bangun datar' },
+            { id: 'senibudaya', num: 2, name: 'Seni Budaya', icon: '🎭', color: 'rose', desc: 'Tari daerah, kerajinan Nusantara & budaya Indonesia' },
+            { id: 'adab', num: 3, name: 'Adab', icon: '🤲', color: 'amber', desc: 'Adab kepada orang tua, guru, makan, minum & berteman' },
+            { id: 'pai', num: 4, name: 'Pendidikan Agama Islam', icon: '🕌', color: 'emerald', desc: 'Rukun Islam, Rukun Iman, huruf hijaiyah & doa harian' },
+            { id: 'pancasila', num: 5, name: 'Pancasila', icon: '🦅', color: 'red', desc: 'Lambang sila Pancasila, aturan rumah/sekolah & gotong royong' },
+            { id: 'inggris', num: 6, name: 'Bahasa Inggris', icon: '🇬🇧', color: 'indigo', desc: 'Greetings, numbers, colors, animals & family' },
+            { id: 'banjar', num: 7, name: 'Bahasa Banjar', icon: '🛶', color: 'teal', desc: 'Kosakata harian Banjar, sapaan & budaya Banua' },
+            { id: 'senirupa', num: 8, name: 'Seni Rupa', icon: '🎨', color: 'orange', desc: 'Titik, garis, bentuk, warna primer/sekunder & kolase' },
+            { id: 'senimusik', num: 9, name: 'Seni Musik', icon: '🎵', color: 'purple', desc: 'Irama, tempo, bunyi alam/buatan & alat musik' },
+            { id: 'pjok', num: 10, name: 'PJOK', icon: '⚽', color: 'lime', desc: 'Gerak lokomotor, non-lokomotor, manipulatif & hidup sehat' },
+            { id: 'indonesia', num: 11, name: 'Bahasa Indonesia', icon: '📚', color: 'yellow', desc: 'Huruf, suku kata, kalimat santun, tanda baca & bacaan pendek' }
+        ];
+
+        // =========================================================================
+        // BANK 330 SOAL (11 MATA PELAJARAN × 30 SOAL PILIHAN GANDA KELAS 1 SD)
+        // Format ringkas [kategori, visual, pertanyaan, [A, B, C], kunciIndex, penjelasan]
+        // =========================================================================
+        const RAW_QUESTION_BANKS = {
+            // 1. MATEMATIKA (30 SOAL)
+            matematika: [
+                ["🔢 Membilang 1-20", "🍎🍎🍎🍎🍎 🍎🍎", "Ada berapa banyak buah apel pada gambar di atas?", ["6 apel", "7 apel", "8 apel"], 1, "5 apel ditambah 2 apel sama dengan 7 apel."],
+                ["🔢 Membilang 1-20", "11 — 12 — ... — 14 — 15", "Bilangan yang tepat untuk mengisi titik-titik di atas adalah...", ["13", "16", "10"], 0, "Urutan bilangan setelah 12 adalah 13."],
+                ["🔢 Membilang 1-20", "18  🆚  14", "Bilangan 18 ... dari bilangan 14.", ["Lebih kecil", "Lebih besar", "Sama dengan"], 1, "18 memiliki nilai lebih besar daripada 14."],
+                ["🔢 Membilang 1-20", "15, 12, 19, 10", "Urutan bilangan di atas dari yang paling kecil adalah...", ["10, 12, 15, 19", "19, 15, 12, 10", "12, 10, 15, 19"], 0, "Bilangan terkecil adalah 10, diikuti 12, 15, dan 19."],
+                ["🔢 Nilai Tempat", "16 = ... puluhan + ... satuan", "Bilangan 16 terdiri dari...", ["1 puluhan dan 6 satuan", "6 puluhan dan 1 satuan", "1 puluhan dan 16 satuan"], 0, "Angka 1 di depan bernilai 1 puluhan (10) dan 6 bernilai 6 satuan."],
+                ["➕ Penjumlahan", "4 + 5 = ...", "Hasil penjumlahan dari 4 + 5 adalah...", ["8", "9", "10"], 1, "4 ditambah 5 sama dengan 9."],
+                ["➕ Penjumlahan", "8 + 6 = ...", "Hasil penjumlahan dari 8 + 6 adalah...", ["13", "14", "15"], 1, "8 + 2 = 10, lalu 10 + 4 = 14."],
+                ["➕ Penjumlahan", "🎈🎈🎈🎈🎈🎈 + 🎈🎈🎈🎈", "Raka punya 6 balon. Ibu memberi 4 balon lagi. Jumlah balon Raka sekarang...", ["9 balon", "10 balon", "11 balon"], 1, "6 + 4 = 10 balon."],
+                ["➕ Penjumlahan", "12 + 5 = ...", "Hasil dari 12 + 5 adalah...", ["16", "17", "18"], 1, "12 ditambah 5 sama dengan 17."],
+                ["➕ Penjumlahan", "7 + 7 = ...", "Hasil penjumlahan ganda 7 + 7 adalah...", ["13", "14", "15"], 1, "7 ditambah 7 sama dengan 14."],
+                ["➖ Pengurangan", "9 - 4 = ...", "Hasil pengurangan dari 9 - 4 adalah...", ["4", "5", "6"], 1, "9 dikurangi 4 sisanya 5."],
+                ["➖ Pengurangan", "15 - 6 = ...", "Hasil dari 15 - 6 adalah...", ["8", "9", "10"], 1, "15 dikurangi 6 sama dengan 9."],
+                ["➖ Pengurangan", "🍪🍪🍪🍪🍪🍪🍪🍪 (dimakan 3)", "Siti punya 8 kue. Dimakan 3 kue. Sisa kue Siti sekarang adalah...", ["4 kue", "5 kue", "6 kue"], 1, "8 dikurangi 3 sama dengan 5 kue."],
+                ["➖ Pengurangan", "18 - 8 = ...", "Hasil dari 18 - 8 adalah...", ["8", "10", "12"], 1, "18 dikurangi 8 menyisakan 1 puluhan yaitu 10."],
+                ["➖ Pengurangan", "13 - ... = 7", "Bilangan yang tepat untuk mengisi titik-titik di atas adalah...", ["5", "6", "7"], 1, "13 dikurangi 6 sama dengan 7."],
+                ["🔷 Bangun Datar", "⚽ 🪙 🛞", "Roda sepeda dan uang koin berbentuk bangun datar...", ["Segitiga", "Lingkaran", "Segiempat"], 1, "Roda dan koin memiliki sisi melengkung berbentuk lingkaran."],
+                ["🔷 Bangun Datar", "📐 🍕 ⛺", "Potongan pizza dan penggaris segitiga memiliki berapa sisi?", ["3 sisi", "4 sisi", "5 sisi"], 0, "Bangun datar segitiga memiliki 3 sisi dan 3 sudut."],
+                ["🔷 Bangun Datar", "📘 🚪 🖼️", "Buku tulis dan papan tulis berbentuk bangun datar...", ["Lingkaran", "Segiempat", "Segitiga"], 1, "Buku tulis memiliki 4 sisi berbentuk segiempat."],
+                ["📏 Pengukuran Panjang", "✏️ 🆚 📏", "Pensil lebih ... daripada penggaris panjang di papan tulis.", ["Pendek", "Tinggi", "Berat"], 0, "Ukuran pensil lebih pendek daripada penggaris papan tulis."],
+                ["📏 Pengukuran Panjang", "🖐️ ➡️ 📐", "Mengukur panjang meja menggunakan rentangan jari tangan disebut satuan...", ["Jengkal", "Depa", "Langkah"], 0, "Jengkal adalah ukuran dari ujung ibu jari sampai ujung kelingking."],
+                ["⚖️ Pengukuran Berat", "🐘 🆚 🐈", "Hewan yang lebih berat adalah...", ["Kucing", "Gajah", "Sama berat"], 1, "Gajah memiliki tubuh jauh lebih besar dan berat daripada kucing."],
+                ["⚖️ Pengukuran Berat", "🪶 🆚 🪨", "Benda yang lebih ringan adalah...", ["Batu bata", "Bulu ayam", "Besi"], 1, "Bulu ayam sangat ringan dibandingkan batu bata."],
+                ["⏰ Mengenal Waktu", "🌅 🐓 🏫", "Kegiatan berangkat ke sekolah dilakukan pada waktu...", ["Pagi hari", "Sore hari", "Malam hari"], 0, "Siswa berangkat ke sekolah pada pagi hari."],
+                ["⏰ Mengenal Waktu", "📅 Senin ➡️ Selasa ➡️ ...", "Nama hari setelah hari Selasa adalah...", ["Rabu", "Kamis", "Minggu"], 0, "Urutan hari: Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu."],
+                ["⏰ Mengenal Waktu", "📅 Minggu ➡️ ... ➡️ Selasa", "Nama hari di antara Minggu dan Selasa adalah...", ["Senin", "Rabu", "Sabtu"], 0, "Setelah hari Minggu adalah hari Senin."],
+                ["🔁 Pola Bilangan & Gambar", "🔴 🔵 🔴 🔵 🔴 ...", "Gambar selanjutnya untuk melengkapi pola di atas adalah...", ["🔴", "🔵", "🟡"], 1, "Polanya selang-seling merah-biru, sehingga setelah merah adalah biru."],
+                ["🔁 Pola Bilangan & Gambar", "2 — 4 — 6 — ... — 10", "Bilangan loncat 2 yang melengkapi pola di atas adalah...", ["7", "8", "9"], 1, "Pola loncat 2: 2, 4, 6, 8, 10."],
+                ["📊 Mengelompokkan Data", "🍎 🍌 🍊 (Buah) | 🥕 🥬 (Sayur)", "Ada berapa banyak jenis buah pada kelompok di atas?", ["2 jenis", "3 jenis", "5 jenis"], 1, "Kelompok buah terdiri dari 3 jenis: apel, pisang, dan jeruk."],
+                ["🧮 Soal Cerita", "🐟🐟🐟 + 🐟🐟🐟🐟", "Di kolam ada 3 ikan merah dan 4 ikan kuning. Jumlah semua ikan adalah...", ["6 ikan", "7 ikan", "8 ikan"], 1, "3 ikan + 4 ikan = 7 ikan."],
+                ["🧮 Soal Cerita", "🍬🍬🍬🍬🍬🍬🍬🍬🍬🍬 (diberikan 4)", "Bima punya 10 permen. Diberikan kepada adik 4 permen. Sisa permen Bima...", ["5 permen", "6 permen", "7 permen"], 1, "10 permen - 4 permen = 6 permen."]
+            ],
+
+            // 2. SENI BUDAYA (30 SOAL)
+            senibudaya: [
+                ["💃 Seni Tari Nusantara", "💃 🌺 🇮🇩", "Gerakan tubuh yang indah dan berirama diiringi musik disebut...", ["Seni tari", "Seni lukis", "Seni patung"], 0, "Seni tari adalah ungkapan keindahan melalui gerak tubuh berirama."],
+                ["💃 Seni Tari Nusantara", "👐 👏 🎶", "Tari Saman yang terkenal dengan gerakan tepuk tangan cepat berasal dari...", ["Aceh", "Bali", "Papua"], 0, "Tari Saman berasal dari Provinsi Aceh."],
+                ["💃 Seni Tari Nusantara", "🌸 💃 🏝️", "Tari Pendet dan Tari Kecak berasal dari daerah...", ["Bali", "Kalimantan", "Sulawesi"], 0, "Tari Pendet dan Tari Kecak adalah tarian tradisional Bali."],
+                ["💃 Seni Tari Nusantara", "🍽️ 💃 🇮🇩", "Tari Piring yang penarinya membawa piring di tangan berasal dari...", ["Sumatera Barat", "Jawa Tengah", "Maluku"], 0, "Tari Piring berasal dari Minangkabau, Sumatera Barat."],
+                ["💃 Gerak Tari Dasar", "🦋 👐 🌿", "Menirukan gerakan kupu-kupu terbang dilakukan dengan menggerakkan kedua...", ["Tangan naik turun", "Kaki melompat", "Kepala menggeleng"], 0, "Kedua tangan direntangkan dan digerakkan naik turun seperti sayap kupu-kupu."],
+                ["💃 Gerak Tari Dasar", "🌳 🌬️ ↔️", "Menirukan pohon tertiup angin sepoi-sepoi dilakukan dengan gerak badan...", ["Meliuk pelan ke kanan dan kiri", "Berlari kencang", "Duduk diam"], 0, "Badan meliuk lembut ke kanan dan kiri mengikuti irama angin."],
+                ["💃 Gerak Tari Dasar", "🐸 ⬆️ 💦", "Gerakan tari menirukan katak dilakukan dengan cara...", ["Meloncat", "Terbang", "Merayap"], 0, "Katak bergerak dengan cara meloncat."],
+                ["👕 Pakaian & Rumah Adat", "🏠 🦬 🇮🇩", "Rumah adat Gadang yang atapnya runcing seperti tanduk kerbau berasal dari...", ["Sumatera Barat", "Jawa Barat", "Papua"], 0, "Rumah Gadang adalah rumah adat masyarakat Minangkabau, Sumatera Barat."],
+                ["👕 Pakaian & Rumah Adat", "🏠 🌾 🏔️", "Rumah adat Honai yang berbentuk bundar beratap jerami berasal dari...", ["Papua", "Bali", "Riau"], 0, "Rumah Honai adalah rumah tradisional masyarakat Papua."],
+                ["👕 Pakaian & Rumah Adat", "👘 🇮🇩 ✨", "Kain tradisional Indonesia yang digambar menggunakan malam dan canting adalah...", ["Batik", "Songket", "Ulos"], 0, "Batik adalah warisan budaya Indonesia yang dibuat dengan malam dan canting."],
+                ["🎶 Lagu Daerah Indonesia", "🎵 Ampar-Ampar Pisang 🍌", "Lagu daerah 'Ampar-Ampar Pisang' berasal dari daerah...", ["Kalimantan Selatan", "Jawa Timur", "Sulawesi Selatan"], 0, "Ampar-Ampar Pisang adalah lagu daerah terkenal dari Kalimantan Selatan."],
+                ["🎶 Lagu Daerah Indonesia", "🎵 Gundul-Gundul Pacul 🎶", "Lagu daerah 'Gundul-Gundul Pacul' berasal dari...", ["Jawa Tengah", "Aceh", "Bali"], 0, "Gundul-Gundul Pacul adalah lagu rakyat dari Jawa Tengah."],
+                ["🎶 Lagu Daerah Indonesia", "🎵 Apuse & Yamko Rambe Yamko 🎶", "Lagu daerah 'Apuse' berasal dari provinsi...", ["Papua", "Sumatera Utara", "Lampung"], 0, "Apuse adalah lagu daerah yang berasal dari Papua."],
+                ["🎶 Lagu Daerah Indonesia", "🎵 Cicak-Cicak di Dinding 🦎", "Lagu anak 'Cicak-Cicak di Dinding' menceritakan hewan cicak yang merayap di...", ["Dinding", "Lantai", "Air"], 0, "Dalam liriknya disebutkan 'Cicak-cicak di dinding, diam-diam merayap'."],
+                ["🥁 Alat Musik Tradisional", "🎍 🎶 🇮🇩", "Alat musik tradisional dari bambu yang dimainkan dengan cara digoyangkan adalah...", ["Angklung", "Gendang", "Seruling"], 0, "Angklung berasal dari Jawa Barat dan dibunyikan dengan digoyangkan."],
+                ["🥁 Alat Musik Tradisional", "🥁 👐 🎶", "Alat musik kendang dimainkan dengan cara...", ["Dipukul / ditepuk", "Ditiup", "Digesek"], 0, "Kendang dibunyikan dengan ditepuk menggunakan telapak tangan."],
+                ["🥁 Alat Musik Tradisional", "🎶 💨 🎋", "Alat musik seruling dimainkan dengan cara...", ["Ditiup", "Dipetik", "Digoyang"], 0, "Seruling menghasilkan bunyi merdu saat ditiup."],
+                ["🥁 Alat Musik Tradisional", "🎸 🎶 🇮🇩", "Alat musik Sasando yang dipetik berasal dari Nusa Tenggara Timur terbuat dari...", ["Daun lontar", "Besi baja", "Plastik"], 0, "Sasando memiliki wadah resonansi dari anyaman daun lontar."],
+                ["🎭 Seni Pertunjukan", "🎭 👤 💡", "Pertunjukan boneka kulit tradisional Indonesia yang dimainkan oleh dalang disebut...", ["Wayang kulit", "Lenong", "Reog"], 0, "Wayang kulit dimainkan oleh seorang dalang di balik layar kelir."],
+                ["🎭 Seni Pertunjukan", "🦁 👑 🇮🇩", "Kesenian tradisional Reog yang memakai topeng kepala singa besar berasal dari...", ["Ponorogo (Jawa Timur)", "Bandung", "Medan"], 0, "Reog Ponorogo berasal dari Kabupaten Ponorogo, Jawa Timur."],
+                ["✂️ Prakarya & Kerajinan", "🍂 🌰 ✂️", "Biji kacang hijau, daun kering, dan ranting termasuk bahan prakarya dari...", ["Alam", "Plastik pabrik", "Logam"], 0, "Biji-bijian dan daun kering berasal dari alam sekitar."],
+                ["✂️ Prakarya & Kerajinan", "🍶 📰 ♻️", "Membuat tempat pensil dari botol plastik bekas membantu mengurangi...", ["Sampah", "Udara", "Air"], 0, "Daur ulang barang bekas mengurangi penumpukan sampah."],
+                ["✂️ Prakarya & Kerajinan", "📄 🦢 ✂️", "Seni melipat kertas menjadi bentuk burung atau perahu disebut...", ["Origami", "Melukis", "Memahat"], 0, "Origami adalah seni melipat kertas."],
+                ["✂️ Prakarya & Kerajinan", "🏺 👐 🟫", "Gerabah seperti kendi dan celengan tradisional dibuat dari...", ["Tanah liat", "Kertas koran", "Kain perca"], 0, "Tanah liat mudah dibentuk menjadi gerabah lalu dibakar."],
+                ["💃 Unsur Tari", "💃 ⏱️ 🎶", "Gerakan tari yang cepat atau lambat mengikuti ketukan disebut...", ["Irama / tempo", "Warna", "Suara"], 0, "Tempo mengatur cepat lambatnya gerakan dalam tarian."],
+                ["💃 Unsur Tari", "👗 👑 💄", "Pakaian khusus yang dipakai penari saat tampil di panggung disebut...", ["Kostum tari", "Seragam sekolah", "Baju tidur"], 0, "Kostum tari memperindah penampilan penari sesuai tema tarian."],
+                ["🤝 Sikap Menghargai Budaya", "🇮🇩 🤝 🌍", "Indonesia memiliki banyak tarian dan lagu daerah. Sikap kita sebaiknya...", ["Bangga dan menghargai", "Mengejek daerah lain", "Melupakannya"], 0, "Keberagaman budaya Indonesia harus kita banggakan dan lestarikan."],
+                ["🤝 Sikap Menghargai Budaya", "👏 🎭 😊", "Saat teman tampil menari di depan kelas, sikap kita yang baik adalah...", ["Bertepuk tangan memberi semangat", "Menertawakan teman", "Berbicara sendiri"], 0, "Memberi tepuk tangan menghargai keberanian teman."],
+                ["🎨 Karya Seni Nusantara", "🗿 🏛️ 🇮🇩", "Candi Borobudur yang megah dan penuh relief indah terletak di...", ["Jawa Tengah", "Kalimantan Timur", "Bali"], 0, "Candi Borobudur berada di Magelang, Jawa Tengah."],
+                ["🎨 Karya Seni Nusantara", "🧶 🌈 🇮🇩", "Kain tenun Ulos adalah kain adat kebanggaan masyarakat suku...", ["Batak (Sumatera Utara)", "Sunda", "Bugis"], 0, "Kain Ulos adalah kain tradisional masyarakat Batak."]
+            ],
+
+            // 3. ADAB (30 SOAL)
+            adab: [
+                ["👨‍👩‍👧 Adab kepada Orang Tua", "🌅 🏫 🤝", "Sebelum berangkat ke sekolah, adab yang baik kepada ayah dan ibu adalah...", ["Berpamitan dan mencium tangan", "Langsung pergi diam-diam", "Berteriak dari luar rumah"], 0, "Berpamitan dan mencium tangan orang tua mendatangkan doa dan berkah."],
+                ["👨‍👩‍👧 Adab kepada Orang Tua", "🗣️ ❤️ 👨‍👩‍👧", "Saat berbicara dengan orang tua, suara kita harus...", ["Lemah lembut dan sopan", "Keras dan membentak", "Sambil membelakangi"], 0, "Berbicara lembut kepada orang tua adalah bentuk bakti anak."],
+                ["👨‍👩‍👧 Adab kepada Orang Tua", "📣 🏃‍♂️ 😊", "Jika dipanggil oleh ibu atau ayah, kita sebaiknya...", ["Segera datang memenuhi panggilan", "Pura-pura tidak mendengar", "Menunda-nunda"], 0, "Segera menjawab dan mendatangi orang tua saat dipanggil adalah adab terpuji."],
+                ["👨‍👩‍👧 Adab kepada Orang Tua", "🤲 💖 👨‍👩‍👧", "Setiap selesai shalat, kita dianjurkan mendoakan...", ["Kedua orang tua", "Diri sendiri saja", "Mainan di rumah"], 0, "Mendoakan ampunan dan kesehatan orang tua adalah kewajiban anak sholeh."],
+                ["👩🏻‍🏫 Adab kepada Guru", "🏫 👋 👩🏻‍🏫", "Saat bertemu Bapak atau Ibu Guru di sekolah, kita mengucapkan...", ["Salam dan menyapa sopan", "Diam saja menunduk", "Berlari menjauh"], 0, "Mengucap salam kepada guru menunjukkan rasa hormat."],
+                ["👩🏻‍🏫 Adab kepada Guru", "📖 👂 🤫", "Ketika guru sedang menjelaskan pelajaran di depan kelas, sikap kita adalah...", ["Mendengarkan dengan tenang", "Mengobrol dengan teman", "Bermain pensil"], 0, "Mendengarkan guru dengan tenang membuat ilmu mudah dipahami."],
+                ["👩🏻‍🏫 Adab kepada Guru", "🙋‍♂️ ✋ 💬", "Jika ingin bertanya kepada guru di kelas, sebaiknya kita...", ["Mengangkat tangan terlebih dahulu", "Langsung berteriak", "Mengetuk-ngetuk meja"], 0, "Mengangkat tangan terlebih dahulu menjaga ketertiban kelas."],
+                ["🍽️ Adab Makan & Minum", "🧼 👐 💧", "Sebelum menyentuh makanan, kita harus...", ["Mencuci tangan hingga bersih", "Langsung makan saja", "Mengelap tangan ke baju"], 0, "Mencuci tangan menjaga kebersihan dan kesehatan tubuh."],
+                ["🍽️ Adab Makan & Minum", "🤲 🍛 😊", "Sebelum mulai makan dan minum, kita wajib membaca...", ["Doa sebelum makan", "Doa mau tidur", "Doa naik kendaraan"], 0, "Membaca doa sebelum makan sebagai tanda syukur atas rezeki."],
+                ["🍽️ Adab Makan & Minum", "🖐️ 🥄 🍚", "Saat makan dan minum, kita menggunakan tangan...", ["Kanan", "Kiri", "Kedua tangan"], 0, "Makan dan minum menggunakan tangan kanan sesuai adab yang baik."],
+                ["🍽️ Adab Makan & Minum", "🪑 🥤 😊", "Saat minum air, posisi tubuh kita sebaiknya...", ["Duduk dengan tenang", "Sambil berlari", "Sambil tiduran"], 0, "Minum sambil duduk lebih sopan dan baik untuk kesehatan."],
+                ["🍽️ Adab Makan & Minum", "🗣️ 🍽️ 🤐", "Ketika mulut sedang penuh berisi makanan, kita tidak boleh...", ["Berbicara", "Mengunyah pelan", "Duduk rapi"], 0, "Berbicara saat mulut penuh makanan tidak sopan dan bisa membuat tersedak."],
+                ["🍽️ Adab Makan & Minum", "🍛 ✨ 👍", "Setelah selesai makan, piring dan gelas kotor sebaiknya...", ["Dirapikan atau diletakkan di tempat cuci", "Ditinggal di lantai", "Dibuang"], 0, "Merapikan alat makan melatih tanggung jawab dan membantu ibu."],
+                ["🤝 Adab Berteman", "🧸 🤝 😊", "Saat bermain bersama teman, kita tidak boleh...", ["Berebut mainan dan bertengkar", "Berbagi mainan", "Bekerja sama"], 0, "Berbagi dan rukun membuat permainan menjadi menyenangkan."],
+                ["🤝 Adab Berteman", "😢 🤝 💖", "Jika ada teman yang terjatuh saat bermain, sikap kita adalah...", ["Segera menolongnya", "Menertawakannya", "Membiarkannya saja"], 0, "Menolong teman yang kesusahan adalah perbuatan mulia."],
+                ["🤝 Adab Berteman", "🗣️ 😊 🌸", "Memanggil teman sebaiknya menggunakan...", ["Nama baiknya yang asli", "Julukan yang mengejek", "Teriakan kasar"], 0, "Memanggil dengan nama yang baik menjaga perasaan teman."],
+                ["🚪 Adab Bertamu & Masuk Rumah", "🚪 👋 🏡", "Sebelum masuk ke dalam rumah orang lain atau kelas, kita mengetuk pintu dan mengucap...", ["Salam", "Permisi pulang", "Selamat tidur"], 0, "Mengetuk pintu dan mengucap salam memberi tahu penghuni rumah dengan sopan."],
+                ["🚪 Adab Bertamu & Masuk Rumah", "👞 👟 🏠", "Saat masuk ke dalam rumah, sepatu dan sandal diletakkan dengan rapi di...", ["Rak sepatu", "Atas sofa", "Tengah ruang tamu"], 0, "Meletakkan sepatu di rak menjaga rumah tetap rapi dan bersih."],
+                ["🛌 Adab Tidur & Bangun", "🛌 🤲 🌙", "Sebelum tidur malam, selain menggosok gigi dan mencuci kaki, kita membaca...", ["Doa sebelum tidur", "Doa keluar rumah", "Doa berbuka puasa"], 0, "Membaca doa sebelum tidur memohon perlindungan Tuhan saat beristirahat."],
+                ["🛌 Adab Tidur & Bangun", "🛏️ 🧹 🌅", "Setelah bangun tidur di pagi hari, tempat tidur sebaiknya...", ["Dirapikan kembali", "Dibiarkan berantakan", "Diinjak-injak"], 0, "Merapikan tempat tidur sendiri melatih kemandirian sejak kecil."],
+                ["🕌 Adab di Tempat Ibadah", "🕌 🤫 🙏", "Saat berada di dalam masjid atau tempat ibadah, kita tidak boleh...", ["Berlari-lari dan berteriak", "Duduk tenang", "Menjaga kebersihan"], 0, "Tempat ibadah harus dijaga ketenangan dan kesuciannya."],
+                ["🚽 Adab di Kamar Mandi", "🚿 🦶 🚪", "Saat masuk ke kamar mandi/WC, kita mendahulukan kaki...", ["Kiri", "Kanan", "Melompat"], 0, "Adab masuk kamar mandi adalah berdoa dan melangkah dengan kaki kiri."],
+                ["🚽 Adab di Kamar Mandi", "💧 🚽 ✨", "Setelah selesai buang air di toilet, kita wajib...", ["Menyiram hingga bersih dan hemat air", "Langsung keluar tanpa menyiram", "Membiarkan keran terbuka"], 0, "Menyiram toilet menjaga kebersihan dan mencegah bau tidak sedap."],
+                ["🗣️ Adab Berbicara", "🤥 ❌ ✅", "Saat berbicara dengan siapa pun, kita harus selalu berkata...", ["Jujur dan benar", "Bohong agar dipuji", "Kasar"], 0, "Kejujuran membuat kita dipercaya dan disayangi semua orang."],
+                ["🗣️ Adab Berbicara", "👵🏽 💬 👂", "Ketika orang yang lebih tua sedang berbicara, sikap kita adalah...", ["Mendengarkan dan tidak memotong pembicaraan", "Langsung menyela", "Pergi begitu saja"], 0, "Tidak memotong pembicaraan orang lain adalah tanda kesopanan."],
+                ["🤧 Adab Bersin & Menguap", "🤧 🤧 ✋", "Saat bersin atau batuk di dekat orang lain, sebaiknya kita...", ["Menutup mulut dan hidung dengan tisu/siku", "Bersin ke arah wajah teman", "Tidak menutup mulut"], 0, "Menutup mulut saat bersin mencegah penyebaran kuman."],
+                ["📚 Adab terhadap Buku", "📖 🙏 ✨", "Buku pelajaran berisi ilmu yang bermanfaat, sehingga kita harus...", ["Menjaga agar tidak sobek dan tidak dicoret-coret", "Melipat-lipat halamannya", "Melemparnya ke lantai"], 0, "Merawat buku dengan baik adalah wujud menghargai ilmu."],
+                ["🌱 Adab terhadap Lingkungan", "🐈 🐕 ❤️", "Terhadap hewan peliharaan di rumah, adab kita yang baik adalah...", ["Memberi makan dan minum secara teratur", "Menyakitinya", "Mengurungnya tanpa makan"], 0, "Menyayangi makhluk hidup mendatangkan kasih sayang Tuhan."],
+                ["🎁 Adab Menerima & Memberi", "🎁 🤝 😊", "Saat menerima pemberian dari orang lain, kita menerimanya dengan tangan...", ["Kanan sambil mengucap terima kasih", "Kiri sambil cemberut", "Melemparnya"], 0, "Menerima dengan tangan kanan dan berterima kasih adalah sikap santun."],
+                ["😔 Adab Saat Bersalah", "🙏 ❤️ 🤝", "Jika kita berbuat salah kepada teman atau adik, kita harus segera...", ["Meminta maaf dengan tulus", "Menyalahkan orang lain", "Marah-marah"], 0, "Berani meminta maaf dan tidak mengulangi kesalahan adalah sifat terpuji."]
+            ],
+
+            // 4. PENDIDIKAN AGAMA ISLAM (30 SOAL)
+            pai: [
+                ["☪️ Kalimat Tayyibah", "📖 ✨ 🤲", "Sebelum memulai belajar atau melakukan pekerjaan baik, umat Islam membaca...", ["Basmalah (Bismillahirrahmanirrahim)", "Hamdalah", "Istighfar"], 0, "Membaca Basmalah memohon keberkahan dari Allah Swt."],
+                ["☪️ Kalimat Tayyibah", "🎉 🤲 😊", "Setelah selesai makan atau mendapat nikmat, kita mengucap Hamdalah yang berbunyi...", ["Alhamdulillahirabbil 'alamin", "Subhanallah", "Allahu Akbar"], 0, "Alhamdulillah artinya segala puji bagi Allah."],
+                ["☪️ Rukun Iman", "🌟 6️⃣ ☪️", "Rukun Iman dalam agama Islam berjumlah...", ["5 perkara", "6 perkara", "4 perkara"], 1, "Rukun Iman ada 6, dimulai dari iman kepada Allah Swt."],
+                ["☪️ Rukun Iman", "1️⃣ ☝️ ☪️", "Rukun Iman yang pertama adalah iman kepada...", ["Allah Swt.", "Malaikat", "Kitab-kitab"], 0, "Iman kepada Allah Swt. adalah Rukun Iman pertama."],
+                ["☪️ Rukun Iman", "👼 📜 ✨", "Malaikat yang bertugas menyampaikan wahyu kepada para nabi adalah malaikat...", ["Jibril", "Mikail", "Izrail"], 0, "Malaikat Jibril bertugas menyampaikan wahyu Allah Swt."],
+                ["🕌 Rukun Islam", "🕌 5️⃣ ☪️", "Rukun Islam berjumlah...", ["5 perkara", "6 perkara", "3 perkara"], 0, "Rukun Islam ada 5: Syahadat, Shalat, Zakat, Puasa, dan Haji."],
+                ["🕌 Rukun Islam", "☝️ 🗣️ ☪️", "Rukun Islam yang pertama adalah mengucapkan dua kalimat...", ["Syahadat", "Takbir", "Tasbih"], 0, "Dua kalimat syahadat adalah persaksian bahwa tiada Tuhan selain Allah dan Nabi Muhammad utusan Allah."],
+                ["🕌 Rukun Islam", "🧎‍♂️ 🕌 5️⃣", "Rukun Islam yang kedua adalah mendirikan...", ["Shalat", "Puasa", "Zakat"], 0, "Shalat wajib dikerjakan lima waktu dalam sehari semalam."],
+                ["🕌 Rukun Islam", "🌙 🍽️ ❌", "Puasa wajib bagi umat Islam dilaksanakan pada bulan...", ["Ramadhan", "Syawal", "Muharram"], 0, "Puasa Ramadhan adalah Rukun Islam keempat."],
+                ["🕌 Shalat Wajib", "⏰ 🕌 5️⃣", "Jumlah shalat fardhu (wajib) dalam sehari semalam adalah...", ["5 waktu", "3 waktu", "7 waktu"], 0, "Shalat wajib 5 waktu: Subuh, Dzuhur, Ashar, Maghrib, Isya."],
+                ["🕌 Shalat Wajib", "🌅 🧎‍♂️ 2️⃣", "Shalat wajib yang dikerjakan pada waktu pagi hari sebanyak 2 rakaat adalah shalat...", ["Subuh", "Maghrib", "Isya"], 0, "Shalat Subuh terdiri dari 2 rakaat."],
+                ["🕌 Shalat Wajib", "🌇 🧎‍♂️ 3️⃣", "Shalat wajib yang jumlah rakaatnya 3 rakaat adalah shalat...", ["Maghrib", "Dzuhur", "Ashar"], 0, "Shalat Maghrib terdiri dari 3 rakaat saat matahari terbenam."],
+                ["📖 Al-Qur'an & Surah Pendek", "📗 🕌 ✨", "Kitab suci umat Islam adalah...", ["Al-Qur'an", "Zabur", "Injil"], 0, "Al-Qur'an diturunkan kepada Nabi Muhammad saw."],
+                ["📖 Al-Qur'an & Surah Pendek", "📖 1️⃣ 🕌", "Surah pembuka dalam Al-Qur'an yang wajib dibaca saat shalat adalah surah...", ["Al-Fatihah", "An-Nas", "Al-Falaq"], 0, "Al-Fatihah artinya pembukaan, terdiri dari 7 ayat."],
+                ["📖 Al-Qur'an & Surah Pendek", "📖 ☝️ ✨", "Surah Al-Ikhlas mengajarkan bahwa Allah Swt. itu...", ["Maha Esa (Satu)", "Banyak", "Lemah"], 0, "Qul huwallahu ahad artinya Katakanlah Dialah Allah Yang Maha Esa."],
+                ["🔤 Huruf Hijaiyah", "ا — ب — ت — ث", "Huruf hijaiyah pertama adalah...", ["Alif (ا)", "Ba (ب)", "Ta (ت)"], 0, "Urutan huruf hijaiyah dimulai dari Alif, Ba, Ta, Tsa."],
+                ["🔤 Huruf Hijaiyah", "بَ  —  بِ  —  بُ", "Tanda baca garis di atas huruf hijaiyah yang berbunyi 'a' disebut...", ["Fathah", "Kasrah", "Dhammah"], 0, "Fathah berada di atas huruf dan dibaca 'a'."],
+                ["🔤 Huruf Hijaiyah", "بِ (bi)", "Tanda baca garis di bawah huruf hijaiyah yang berbunyi 'i' disebut...", ["Kasrah", "Fathah", "Sukun"], 0, "Kasrah berada di bawah huruf dan dibaca 'i'."],
+                ["💧 Bersuci (Thaharah)", "💧 👐 🕌", "Sebelum melaksanakan shalat, umat Islam wajib bersuci dengan cara...", ["Berwudhu", "Tidur", "Makan"], 0, "Wudhu menyucikan diri dari hadas kecil sebelum shalat."],
+                ["💧 Bersuci (Thaharah)", "🧼 💧 ✨", "Allah Swt. mencintai orang-orang yang beriman dan menjaga...", ["Kebersihan", "Kemalasan", "Kotoran"], 0, "Kebersihan adalah sebagian dari iman."],
+                ["🌟 Asmaul Husna", "💖 🌍 ☪️", "Asmaul Husna 'Ar-Rahman' artinya Allah Maha...", ["Pengasih", "Penyayang", "Pencipta"], 0, "Ar-Rahman artinya Allah Maha Pengasih kepada seluruh makhluk."],
+                ["🌟 Asmaul Husna", "💝 🤲 ☪️", "Asmaul Husna 'Ar-Rahim' artinya Allah Maha...", ["Penyayang", "Melihat", "Mendengar"], 0, "Ar-Rahim artinya Allah Maha Penyayang."],
+                ["👑 Kisah Nabi & Rasul", "1️⃣ 🌿 👑", "Manusia pertama dan nabi pertama yang diciptakan Allah Swt. adalah Nabi...", ["Adam a.s.", "Nuh a.s.", "Musa a.s."], 0, "Nabi Adam a.s. adalah manusia dan nabi pertama."],
+                ["👑 Kisah Nabi & Rasul", "🚢 🌊 🐾", "Nabi yang membuat kapal besar atas perintah Allah Swt. adalah Nabi...", ["Nuh a.s.", "Ibrahim a.s.", "Yusuf a.s."], 0, "Nabi Nuh a.s. menyelamatkan umatnya dan hewan dengan kapal besar."],
+                ["👑 Kisah Nabi & Rasul", "🕌 🌙 ⭐", "Nabi terakhir sekaligus teladan seluruh umat Islam adalah Nabi...", ["Muhammad saw.", "Isa a.s.", "Sulaiman a.s."], 0, "Nabi Muhammad saw. adalah nabi penutup (Khatamul Anbiya)."],
+                ["👑 Kisah Nabi & Rasul", "🌟 🗣️ ✅", "Nabi Muhammad saw. sejak kecil terkenal sangat jujur sehingga mendapat gelar...", ["Al-Amin (dapat dipercaya)", "Al-Farooq", "As-Siddiq"], 0, "Al-Amin artinya orang yang sangat dapat dipercaya."],
+                ["🤲 Doa Sehari-hari", "🤲 👨‍👩‍👧 ❤️", "Arti doa 'Rabbighfir li waliwalidayya' adalah ya Tuhanku ampunilah dosaku dan dosa...", ["Kedua orang tuaku", "Teman-temanku", "Tetanggaku"], 0, "Doa tersebut memohon ampunan untuk diri sendiri dan kedua orang tua."],
+                ["🤲 Doa Sehari-hari", "📖 🧠 ✨", "Doa 'Rabbi zidni 'ilma' dibaca sebelum...", ["Belajar", "Tidur", "Makan"], 0, "Rabbi zidni 'ilma artinya Ya Tuhanku tambahkanlah aku ilmu."],
+                ["💖 Akhlak Terpuji", "😊 🤝 🌸", "Terhadap teman yang berbeda agama atau suku, sikap anak muslim adalah...", ["Saling menghormati dan rukun", "Mengganggu", "Mengejek"], 0, "Islam mengajarkan kasih sayang dan kerukunan antar sesama."],
+                ["💖 Akhlak Terpuji", "💰 🤲 😊", "Memberikan sebagian uang saku kepada kotak amal atau fakir miskin disebut...", ["Sedekah", "Hutang", "Belanja"], 0, "Sedekah adalah berbagi kebaikan dengan ikhlas kepada sesama."]
+            ],
+
+            // 5. PANCASILA (30 SOAL)
+            pancasila: [
+                ["🦅 Lambang Negara", "🦅 🇮🇩 ✨", "Lambang negara Indonesia adalah...", ["Garuda Pancasila", "Harimau Sumatera", "Burung Merak"], 0, "Garuda Pancasila adalah lambang negara Republik Indonesia."],
+                ["🦅 Lambang Negara", "📜 🇮🇩 5️⃣", "Dasar negara Indonesia yang memiliki 5 sila adalah...", ["Pancasila", "UUD 1945", "Bhinneka Tunggal Ika"], 0, "Panca artinya lima, Sila artinya dasar."],
+                ["🦅 Lambang Negara", "🎀 Bhinneka Tunggal Ika 🎀", "Semboyan yang tertulis pada pita yang dicengkeram Garuda Pancasila adalah...", ["Bhinneka Tunggal Ika", "Tut Wuri Handayani", "Merdeka atau Mati"], 0, "Bhinneka Tunggal Ika artinya berbeda-beda tetapi tetap satu jua."],
+                ["⭐ Simbol Sila Pancasila", "⭐ 1️⃣ 🇮🇩", "Simbol sila pertama Pancasila (Ketuhanan Yang Maha Esa) adalah...", ["Bintang", "Rantai", "Pohon Beringin"], 0, "Bintang emas melambangkan sila pertama Pancasila."],
+                ["⭐ Simbol Sila Pancasila", "⛓️ 2️⃣ 🇮🇩", "Simbol sila kedua Pancasila (Kemanusiaan yang Adil dan Beradab) adalah...", ["Rantai emas", "Kepala Banteng", "Padi dan Kapas"], 0, "Rantai emas melambangkan hubungan manusia yang saling membantu."],
+                ["⭐ Simbol Sila Pancasila", "🌳 3️⃣ 🇮🇩", "Simbol sila ketiga Pancasila (Persatuan Indonesia) adalah...", ["Pohon Beringin", "Bintang", "Rantai"], 0, "Pohon beringin tempat berteduh melambangkan persatuan bangsa."],
+                ["⭐ Simbol Sila Pancasila", "🐃 4️⃣ 🇮🇩", "Simbol sila keempat Pancasila adalah...", ["Kepala Banteng", "Padi dan Kapas", "Bintang"], 0, "Kepala banteng melambangkan musyawarah dan kebersamaan."],
+                ["⭐ Simbol Sila Pancasila", "🌾 ☁️ 5️⃣", "Simbol sila kelima Pancasila (Keadilan Sosial bagi Seluruh Rakyat Indonesia) adalah...", ["Padi dan Kapas", "Pohon Beringin", "Rantai"], 0, "Padi (pangan) dan kapas (sandang) melambangkan kesejahteraan rakyat."],
+                ["🇮🇩 Bendera & Lagu Kebangsaan", "🇮🇩 🔴 ⚪", "Warna bendera negara Indonesia adalah...", ["Merah dan Putih", "Merah dan Biru", "Putih dan Hijau"], 0, "Bendera Indonesia bernama Sang Saka Merah Putih."],
+                ["🇮🇩 Bendera & Lagu Kebangsaan", "🎵 Indonesia Raya 🇮🇩", "Judul lagu kebangsaan negara Indonesia adalah...", ["Indonesia Raya", "Garuda Pancasila", "Bagimu Negeri"], 0, "Indonesia Raya diciptakan oleh W.R. Supratman."],
+                ["🙏 Penerapan Sila 1", "🕌 ⛪ 🛕", "Berdoa sebelum belajar dan menghormati teman yang beribadah sesuai sila ke-...", ["1 (Satu)", "3 (Tiga)", "5 (Lima)"], 0, "Beribadah dan berdoa mengamalkan sila pertama Pancasila."],
+                ["🤝 Penerapan Sila 2", "😢 🤝 ❤️", "Membantu adik yang kesulitan memakai sepatu sesuai dengan sila ke-...", ["2 (Dua)", "4 (Empat)", "1 (Satu)"], 0, "Menolong sesama dengan kasih sayang mengamalkan sila kedua."],
+                ["🇮🇩 Penerapan Sila 3", "👧🏽👦🏻 🇮🇩 🤝", "Bermain rukun tanpa membeda-bedakan suku dan asal daerah sesuai sila ke-...", ["3 (Tiga)", "1 (Satu)", "4 (Empat)"], 0, "Menjaga persatuan dan kerukunan sesuai sila ketiga."],
+                ["🗣️ Penerapan Sila 4", "🗳️ 👨‍👩‍👧 💬", "Berdiskusi memilih ketua kelas atau tempat liburan keluarga sesuai sila ke-...", ["4 (Empat)", "2 (Dua)", "5 (Lima)"], 0, "Musyawarah untuk mufakat mengamalkan sila keempat."],
+                ["⚖️ Penerapan Sila 5", "🍰 ⚖️ 👧🏽👦🏻", "Membagi kue kepada adik dan kakak secara adil sesuai dengan sila ke-...", ["5 (Lima)", "1 (Satu)", "3 (Tiga)"], 0, "Bersikap adil kepada sesama sesuai sila kelima."],
+                ["🏠 Aturan di Rumah", "🏠 ⏰ 📋", "Aturan di rumah dibuat agar kehidupan keluarga menjadi...", ["Tertib dan rukun", "Kacau", "Menakutkan"], 0, "Aturan membuat rumah nyaman, aman, dan tertib."],
+                ["🏠 Aturan di Rumah", "🧸 📦 ✨", "Setelah selesai bermain di ruang tamu, mainan harus...", ["Dirapikan kembali ke tempatnya", "Dibiarkan berserakan", "Dibuang keluar"], 0, "Merapikan mainan adalah aturan menjaga kerapian rumah."],
+                ["🏠 Aturan di Rumah", "📺 ⏰ 🛌", "Menonton televisi pada malam hari tidak boleh terlalu larut agar besok tidak...", ["Terlambat bangun sekolah", "Rajin belajar", "Sehat"], 0, "Tidur tepat waktu membuat tubuh segar di pagi hari."],
+                ["🏫 Aturan di Sekolah", "🏫 ⏰ 🔔", "Siswa datang ke sekolah sebaiknya sebelum bel masuk berbunyi agar tidak...", ["Terlambat", "Pintar", "Senang"], 0, "Datang tepat waktu melatih kedisiplinan."],
+                ["🏫 Aturan di Sekolah", "👕 🏫 ✨", "Saat pergi ke sekolah, siswa memakai pakaian...", ["Seragam sekolah yang rapi", "Baju bermain", "Pakaian tidur"], 0, "Memakai seragam rapi adalah tata tertib sekolah."],
+                ["🏫 Aturan di Sekolah", "🧹 🏫 🤝", "Membersihkan ruang kelas bersama-sama sesuai jadwal disebut...", ["Piket kelas", "Upacara", "Ulangan"], 0, "Piket kelas menjaga ruang belajar tetap bersih."],
+                ["🤝 Gotong Royong", "🧹 🏡 👨‍👩‍👧", "Pekerjaan berat seperti membersihkan halaman rumah akan terasa ringan jika dilakukan dengan...", ["Gotong royong (bekerja sama)", "Sendirian sambil marah", "Menunggu orang lain"], 0, "Gotong royong mempercepat pekerjaan dan mempererat kebersamaan."],
+                ["🆔 Identitas Diri", "📛 👧🏽👦🏻 🏫", "Nama lengkap, alamat rumah, dan nama orang tua adalah bagian dari...", ["Identitas diri", "Mainan kesukaan", "Jadwal piket"], 0, "Mengenal identitas diri penting agar kita tahu data diri kita."],
+                ["🆔 Identitas Diri", "👫 ❤️ 😊", "Setiap anak memiliki ciri fisik dan kesukaan yang berbeda. Kita harus saling...", ["Menghargai perbedaan", "Mengejek perbedaan", "Memusuhi"], 0, "Perbedaan adalah anugerah yang harus dihormati."],
+                ["🇮🇩 Simbol Garuda", "🪶 17 - 8 - 1945 🦅", "Jumlah bulu pada sayap, ekor, dan leher Garuda Pancasila melambangkan hari...", ["Kemerdekaan Indonesia", "Ulang tahun sekolah", "Hari anak"], 0, "17 Agustus 1945 adalah hari kemerdekaan Indonesia."],
+                ["🏛️ Hak & Kewajiban", "🧹 🏠 ✅", "Membantu orang tua membersihkan rumah adalah contoh ... anak di rumah.", ["Kewajiban", "Hukuman", "Permainan"], 0, "Kewajiban adalah sesuatu yang harus kita lakukan dengan tanggung jawab."],
+                ["🏛️ Hak & Kewajiban", "❤️ 👨‍👩‍👧 🍚", "Mendapatkan kasih sayang, makanan sehat, dan pendidikan adalah ... anak.", ["Hak", "Larangan", "Denda"], 0, "Hak adalah sesuatu yang layak diterima oleh anak."],
+                ["🚦 Aturan di Jalan", "🚶‍♂️ 🛣️ ⬅️", "Jika berjalan kaki di jalan raya, kita sebaiknya berjalan di...", ["Trotoar (jalur pejalan kaki)", "Tengah jalan", "Jalur cepat"], 0, "Trotoar melindungi pejalan kaki dari kendaraan."],
+                ["🗣️ Musyawarah", "🙋‍♂️ 💬 😊", "Saat teman menyampaikan pendapat dalam diskusi kelas, sikap kita adalah...", ["Mendengarkan dengan baik", "Menyoraki", "Menutup telinga"], 0, "Menghargai pendapat orang lain adalah kunci musyawarah."],
+                ["❤️ Cinta Tanah Air", "🇮🇩 🛍️ ✨", "Memakai produk buatan Indonesia dan menjaga kebersihan lingkungan adalah wujud...", ["Cinta tanah air", "Sombong", "Malas"], 0, "Cinta tanah air dimulai dari hal sederhana di sekitar kita."]
+            ],
+
+            // 6. BAHASA INGGRIS (30 SOAL)
+            inggris: [
+                ["👋 Greetings (Sapaan)", "🌅 🏫 👋", "Sapaan dalam bahasa Inggris pada waktu pagi hari adalah...", ["Good morning", "Good night", "Good afternoon"], 0, "Good morning artinya selamat pagi."],
+                ["👋 Greetings (Sapaan)", "🌙 🛌 💤", "Sebelum tidur di malam hari, kita mengucapkan...", ["Good night", "Good morning", "Hello"], 0, "Good night artinya selamat malam / selamat tidur."],
+                ["👋 Greetings (Sapaan)", "🎁 😊 🙏", "Ungkapan 'Terima kasih' dalam bahasa Inggris adalah...", ["Thank you", "Sorry", "Please"], 0, "Thank you artinya terima kasih."],
+                ["👋 Greetings (Sapaan)", "😔 🙏 💬", "Jika berbuat salah, kita meminta maaf dengan mengucapkan...", ["I am sorry", "Thank you", "Goodbye"], 0, "I am sorry artinya saya minta maaf."],
+                ["👋 Greetings (Sapaan)", "👋 🚶‍♂️ 🏫", "Saat berpisah pulang sekolah dengan teman, kita berkata...", ["Goodbye", "Good morning", "Sit down"], 0, "Goodbye artinya selamat tinggal / sampai jumpa."],
+                ["🔢 Numbers (Angka 1-10)", "🍎🍎🍎🍎🍎 (5)", "Angka '5' dalam bahasa Inggris adalah...", ["Five", "Four", "Six"], 0, "One (1), two (2), three (3), four (4), five (5)."],
+                ["🔢 Numbers (Angka 1-10)", "⭐⭐⭐⭐⭐⭐⭐⭐ (8)", "Angka '8' dalam bahasa Inggris adalah...", ["Seven", "Eight", "Nine"], 1, "Eight artinya delapan."],
+                ["🔢 Numbers (Angka 1-10)", "🖐️ + 🖐️ = 10", "Bilangan '10' dalam bahasa Inggris adalah...", ["Ten", "Two", "Three"], 0, "Ten artinya sepuluh."],
+                ["🔢 Numbers (Angka 1-10)", "Two + Three = ...", "Hasil dari 'Two + Three' (2 + 3) dalam bahasa Inggris adalah...", ["Four", "Five", "Six"], 1, "2 + 3 = 5 (Five)."],
+                ["🎨 Colors (Warna)", "🍌 ☀️ 🐥", "Warna buah pisang masak dan matahari adalah...", ["Yellow", "Blue", "Green"], 0, "Yellow artinya kuning."],
+                ["🎨 Colors (Warna)", "🍓 ❤️ 🌹", "Warna buah stroberi dan mawar merah dalam bahasa Inggris adalah...", ["Red", "Black", "White"], 0, "Red artinya merah."],
+                ["🎨 Colors (Warna)", "🌊 🌌 👖", "Warna laut dan langit cerah dalam bahasa Inggris adalah...", ["Blue", "Pink", "Brown"], 0, "Blue artinya biru."],
+                ["🎨 Colors (Warna)", "🌿 🐸 🍃", "Warna daun dan katak dalam bahasa Inggris adalah...", ["Green", "Orange", "Purple"], 0, "Green artinya hijau."],
+                ["🐾 Animals (Hewan)", "🐱 🥛 🐟", "Hewan 'Kucing' dalam bahasa Inggris adalah...", ["Cat", "Dog", "Bird"], 0, "Cat artinya kucing."],
+                ["🐾 Animals (Hewan)", "🐟 🌊 🏊", "Hewan 'Ikan' dalam bahasa Inggris adalah...", ["Fish", "Duck", "Lion"], 0, "Fish artinya ikan."],
+                ["🐾 Animals (Hewan)", "🐦 🌳 🎶", "Hewan 'Burung' dalam bahasa Inggris adalah...", ["Bird", "Cow", "Ant"], 0, "Bird artinya burung."],
+                ["🐾 Animals (Hewan)", "🐘 🌿 🌍", "'Elephant' adalah nama hewan...", ["Gajah", "Kelinci", "Ayam"], 0, "Elephant artinya gajah."],
+                ["🎒 School Objects (Benda Sekolah)", "📘 📖 🎒", "'Book' dalam bahasa Indonesia artinya...", ["Buku", "Pensil", "Tas"], 0, "Book artinya buku."],
+                ["🎒 School Objects (Benda Sekolah)", "✏️ ✍️ 📓", "Alat tulis 'Pensil' dalam bahasa Inggris adalah...", ["Pencil", "Eraser", "Ruler"], 0, "Pencil artinya pensil."],
+                ["🎒 School Objects (Benda Sekolah)", "🎒 🏫 👦🏻", "Tas sekolah dalam bahasa Inggris disebut...", ["Bag", "Table", "Chair"], 0, "Bag artinya tas."],
+                ["🧍 Parts of Body (Anggota Tubuh)", "👀 👓 ✨", "'Eyes' adalah anggota tubuh untuk melihat yaitu...", ["Mata", "Hidung", "Telinga"], 0, "Eyes artinya mata."],
+                ["🧍 Parts of Body (Anggota Tubuh)", "👃 🌸 🌬️", "'Nose' dalam bahasa Indonesia artinya...", ["Hidung", "Mulut", "Tangan"], 0, "Nose artinya hidung."],
+                ["🧍 Parts of Body (Anggota Tubuh)", "🖐️ 👏 ✍️", "'Hand' dalam bahasa Indonesia artinya...", ["Tangan", "Kaki", "Kepala"], 0, "Hand artinya tangan."],
+                ["👨‍👩‍👧 Family (Keluarga)", "👩🏻 ❤️ 🏠", "'Mother' dalam bahasa Indonesia artinya...", ["Ibu", "Ayah", "Adik"], 0, "Mother artinya ibu."],
+                ["👨‍👩‍👧 Family (Keluarga)", "👨🏽 ❤️ 🏠", "'Father' dalam bahasa Indonesia artinya...", ["Ayah", "Kakek", "Paman"], 0, "Father artinya ayah."],
+                ["🍎 Fruits (Buah-buahan)", "🍎 🌳 😋", "'Apple' adalah buah...", ["Apel", "Pisang", "Semangka"], 0, "Apple artinya apel."],
+                ["🍎 Fruits (Buah-buahan)", "🍌 🐒 💛", "Buah pisang dalam bahasa Inggris adalah...", ["Banana", "Orange", "Grape"], 0, "Banana artinya pisang."],
+                ["💬 Classroom Commands", "🧍‍♂️ ⬆️ 🏫", "'Stand up!' artinya...", ["Berdiri!", "Duduk!", "Tidur!"], 0, "Stand up artinya berdiri."],
+                ["💬 Classroom Commands", "🪑 ⬇️ 🏫", "'Sit down, please!' artinya...", ["Silakan duduk!", "Silakan lari!", "Silakan keluar!"], 0, "Sit down artinya duduk."],
+                ["🙋 Perkenalan Diri", "👦🏻 💬 'My name is Raka'", "Kalimat 'My name is Raka' artinya...", ["Nama saya Raka", "Umur saya Raka", "Rumah saya Raka"], 0, "My name is... digunakan untuk memperkenalkan nama diri."]
+            ],
+
+            // 7. BAHASA BANJAR (30 SOAL)
+            banjar: [
+                ["🛶 Sapaan & Kata Santun Banjar", "🙏 😊 🛶", "Kata 'Terima kasih' dalam bahasa Banjar yang sopan adalah...", ["Tarima kasih / Makasih", "Maaf", "Permisi"], 0, "Tarima kasih digunakan untuk berterima kasih dalam bahasa Banjar."],
+                ["🛶 Sapaan & Kata Santun Banjar", "🚶‍♂️ 👵🏽 🙏", "Saat berjalan melewati orang tua di Banjar, kita membungkuk sambil mengucap...", ["Permisi / Tabik pun", "Awas", "Hancap"], 0, "Tabik pun atau permisi adalah ungkapan santun saat lewat di depan orang tua."],
+                ["🛶 Sapaan & Kata Santun Banjar", "💬 😊 ❓", "Apa arti kalimat sapaan Banjar 'Apa habar?'", ["Apa kabar?", "Mau ke mana?", "Siapa namamu?"], 0, "'Apa habar?' artinya menanyakan kabar ('Apa kabar?')."],
+                ["🛶 Sapaan & Kata Santun Banjar", "👍 😊 ✨", "Jika ditanya 'Apa habar?', jawaban 'Baik' dalam bahasa Banjar adalah...", ["Baik / Waras haja", "Garing", "Lapah"], 0, "Baik atau waras haja artinya dalam keadaan sehat dan baik."],
+                ["👨‍👩‍👧 Panggilan Keluarga Banjar", "👨🏽 ❤️ 🏠", "Sebutan untuk 'Ayah / Bapak' dalam bahasa Banjar adalah...", ["Abah", "Uma", "Kai"], 0, "Dalam bahasa Banjar, ayah dipanggil 'Abah'."],
+                ["👨‍👩‍👧 Panggilan Keluarga Banjar", "👩🏻 ❤️ 🏠", "Sebutan untuk 'Ibu / Mama' dalam bahasa Banjar adalah...", ["Uma", "Abah", "Nini"], 0, "Dalam bahasa Banjar, ibu dipanggil 'Uma'."],
+                ["👨‍👩‍👧 Panggilan Keluarga Banjar", "👴🏽 🏡 ✨", "Sebutan untuk 'Kakek' dalam bahasa Banjar adalah...", ["Kai", "Nini", "Julak"], 0, "Kai adalah panggilan untuk kakek dalam bahasa Banjar."],
+                ["👨‍👩‍👧 Panggilan Keluarga Banjar", "👵🏽 🏡 ✨", "Sebutan untuk 'Nenek' dalam bahasa Banjar adalah...", ["Nini", "Kai", "Acil"], 0, "Nini adalah panggilan untuk nenek dalam bahasa Banjar."],
+                ["👨‍👩‍👧 Panggilan Keluarga Banjar", "👦🏻 👧🏽 🏠", "Kakak laki-laki atau perempuan dalam bahasa Banjar dipanggil...", ["Kaka", "Adik", "Paman"], 0, "Kaka adalah panggilan untuk kakak."],
+                ["🔢 Angka dalam Bahasa Banjar", "1️⃣ ☝️ 🛶", "Bilangan 'Satu' dalam bahasa Banjar adalah...", ["Asa / Sabuting", "Dua", "Talu"], 0, "Asa atau sabuting berarti satu."],
+                ["🔢 Angka dalam Bahasa Banjar", "3️⃣ 🛶 ✨", "Bilangan 'Tiga' dalam bahasa Banjar adalah...", ["Talu", "Ampat", "Lima"], 0, "Urutan hitungan Banjar: asa, dua, talu, ampat, lima."],
+                ["🔢 Angka dalam Bahasa Banjar", "4️⃣ 🛶 ✨", "Bilangan 'Empat' dalam bahasa Banjar adalah...", ["Ampat", "Talu", "Anam"], 0, "Ampat artinya empat."],
+                ["🔢 Angka dalam Bahasa Banjar", "1️⃣0️⃣ 🖐️🖐️", "Bilangan 'Sepuluh' dalam bahasa Banjar adalah...", ["Sapuluh", "Salapan", "Sambilan"], 0, "Sapuluh artinya sepuluh."],
+                ["🧍 Anggota Tubuh (Bahasa Banjar)", "👀 👓 ✨", "Kata 'Mata' dalam bahasa Banjar tetap disebut...", ["Mata", "Talinga", "Hidung"], 0, "Mata dalam bahasa Banjar adalah mata."],
+                ["🧍 Anggota Tubuh (Bahasa Banjar)", "👂 🎶 🔔", "Anggota tubuh 'Telinga' dalam bahasa Banjar adalah...", ["Talinga", "Batis", "Tangan"], 0, "Talinga artinya telinga."],
+                ["🧍 Anggota Tubuh (Bahasa Banjar)", "🦶 👟 🚶‍♂️", "Anggota tubuh 'Kaki' dalam bahasa Banjar disebut...", ["Batis", "Kapala", "Parut"], 0, "Batis artinya kaki dalam bahasa Banjar."],
+                ["🐾 Hewan dalam Bahasa Banjar", "🐟 🌊 🛶", "Kata 'Ikan' dalam bahasa Banjar adalah...", ["Iwak", "Hayam", "Itik"], 0, "Iwak artinya ikan (contoh: iwak haruan, iwak papuyu)."],
+                ["🐾 Hewan dalam Bahasa Banjar", "🐔 🥚 🌾", "Hewan 'Ayam' dalam bahasa Banjar adalah...", ["Hayam", "Kucing", "Hadangan"], 0, "Hayam artinya ayam."],
+                ["🐾 Hewan dalam Bahasa Banjar", "🦆 💧 🌾", "Hewan 'Bebek' dalam bahasa Banjar disebut...", ["Itik", "Burung", "Iwak"], 0, "Itik artinya bebek."],
+                ["🐾 Hewan dalam Bahasa Banjar", "🐱 🐟 🏠", "Hewan 'Kucing' dalam bahasa Banjar adalah...", ["Kucing / Miong", "Hayam", "Iwak"], 0, "Kucing disebut kucing atau miong."],
+                ["🍚 Aktivitas & Kosakata Harian", "🍚 🥄 😋", "Kata 'Makan' dalam bahasa Banjar adalah...", ["Makan", "Guring", "Tulak"], 0, "Makan artinya makan."],
+                ["🍚 Aktivitas & Kosakata Harian", "💧 🥤 😊", "Kata 'Minum' dalam bahasa Banjar adalah...", ["Nginum / Minum", "Mandi", "Bukah"], 0, "Nginum artinya minum."],
+                ["🍚 Aktivitas & Kosakata Harian", "🛌 💤 🌙", "Kata 'Tidur' dalam bahasa Banjar adalah...", ["Guring", "Duduk", "Badiri"], 0, "Guring artinya tidur."],
+                ["🍚 Aktivitas & Kosakata Harian", "🏫 🚶‍♂️ 🌅", "'Tulak ka sakulah' dalam bahasa Indonesia artinya...", ["Berangkat ke sekolah", "Pulang dari pasar", "Tidur di rumah"], 0, "Tulak artinya pergi/berangkat, sakulah artinya sekolah."],
+                ["🍚 Aktivitas & Kosakata Harian", "🏃‍♂️ 💨 ⚽", "Kata 'Berlari' dalam bahasa Banjar adalah...", ["Bukah", "Bajalan", "Duduk"], 0, "Bukah artinya berlari."],
+                ["🚤 Budaya & Lingkungan Banua", "🚤 🍌 🍍 🌊", "Pasar tradisional di atas perahu yang terkenal di Kalimantan Selatan disebut...", ["Pasar Terapung", "Pasar Modern", "Mall"], 0, "Pasar Terapung Lok Baintan dan Muara Kuin adalah ikon budaya Banjar."],
+                ["🚤 Budaya & Lingkungan Banua", "🚤 🌊 🪵", "Perahu kecil tradisional khas masyarakat Banjar disebut...", ["Jukung", "Kapal terbang", "Kereta"], 0, "Jukung adalah perahu kayu tradisional Banjar."],
+                ["🍰 Makanan Khas Banjar", "🍰 🟢 🥥 😋", "Kue tradisional Banjar berwarna hijau manis dan lembut yang terkenal adalah...", ["Wadai Bingka / Amparan Tatak", "Pizza", "Burger"], 0, "Kue dalam bahasa Banjar disebut 'wadai' (seperti wadai bingka)."],
+                ["🌈 Kata Sifat Bahasa Banjar", "😄 🌸 ✨", "Kata 'Senang / Gembira' dalam bahasa Banjar adalah...", ["Himung", "Sarik", "Takutan"], 0, "Himung artinya sangat senang atau gembira."],
+                ["🌈 Kata Sifat Bahasa Banjar", "✨ 🧹 🏡", "Kata 'Bersih' dalam bahasa Banjar adalah...", ["Barasih", "Rigat", "Ganal"], 0, "Barasih artinya bersih, sedangkan rigat artinya kotor."]
+            ],
+
+            // 8. SENI RUPA (30 SOAL)
+            senirupa: [
+                ["✏️ Unsur Seni Rupa", "⚫ • • •", "Unsur seni rupa yang paling kecil dan menjadi awal dari sebuah garis adalah...", ["Titik", "Bidang", "Warna"], 0, "Semua garis dan bentuk berawal dari sebuah titik."],
+                ["✏️ Unsur Seni Rupa", "➖ 〰️ ⚡", "Kumpulan titik-titik yang memanjang dan menyambung disebut...", ["Garis", "Tekstur", "Ruang"], 0, "Garis terbentuk dari deretan titik yang saling terhubung."],
+                ["✏️ Unsur Seni Rupa", "〰️ 🌊 🐍", "Garis yang berkelok-kelok seperti ombak laut disebut garis...", ["Lengkung / bergelombang", "Lurus tegak", "Zig-zag"], 0, "Ombak laut digambarkan menggunakan garis bergelombang."],
+                ["✏️ Unsur Seni Rupa", "⚡ ⛰️ 🦷", "Garis yang patah-patah tajam seperti gigi gergaji disebut garis...", ["Zig-zag", "Lengkung", "Mendatar"], 0, "Garis zig-zag memiliki sudut-sudut tajam naik turun."],
+                ["🔷 Bentuk dalam Seni Rupa", "☀️ ⚽ 🪙", "Bentuk matahari dan bola digambar menggunakan bentuk dasar...", ["Lingkaran", "Segitiga", "Persegi"], 0, "Matahari dan bola memiliki bentuk bulat/lingkaran."],
+                ["🔷 Bentuk dalam Seni Rupa", "🏠 🔺 🌲", "Atap rumah dan pohon cemara sering digambar menggunakan bentuk...", ["Segitiga", "Lingkaran", "Oval"], 0, "Bentuk segitiga menyerupai atap rumah."],
+                ["🔷 Bentuk dalam Seni Rupa", "🚪 🪟 📺", "Pintu dan jendela rumah digambar menggunakan bentuk...", ["Segiempat", "Lingkaran", "Segitiga"], 0, "Pintu dan jendela umumnya berbentuk segiempat."],
+                ["🎨 Warna Primer (Dasar)", "🔴 🟡 🔵", "Tiga warna dasar (warna primer) dalam seni rupa adalah...", ["Merah, Kuning, Biru", "Hijau, Ungu, Oranye", "Hitam, Putih, Abu-abu"], 0, "Merah, kuning, dan biru adalah warna pokok/primer."],
+                ["🎨 Pencampuran Warna", "🔴 + 🟡 = 🟠", "Jika cat warna merah dicampur dengan warna kuning akan menghasilkan warna...", ["Oranye (Jingga)", "Hijau", "Ungu"], 0, "Merah + Kuning = Oranye."],
+                ["🎨 Pencampuran Warna", "🟡 + 🔵 = 🟢", "Jika warna kuning dicampur dengan warna biru akan menghasilkan warna...", ["Hijau", "Merah", "Cokelat"], 0, "Kuning + Biru = Hijau."],
+                ["🎨 Pencampuran Warna", "🔴 + 🔵 = 🟣", "Jika warna merah dicampur dengan warna biru akan menghasilkan warna...", ["Ungu", "Kuning", "Putih"], 0, "Merah + Biru = Ungu."],
+                ["🖍️ Alat & Bahan Menggambar", "🖍️ ✏️ 🎨", "Alat mewarnai yang terbuat dari lilin berwarna dan terasa lembut adalah...", ["Krayon", "Penggaris", "Penghapus"], 0, "Krayon terbuat dari lilin berwarna dan mudah digunakan anak-anak."],
+                ["🖍️ Alat & Bahan Menggambar", "🖌️ 💧 🎨", "Alat yang digunakan untuk menyapukan cat air ke atas kertas adalah...", ["Kuas", "Pensil", "Gunting"], 0, "Kuas digunakan untuk melukis dengan cat air."],
+                ["🖍️ Alat & Bahan Menggambar", "📄 📓 ✨", "Media datar berwarna putih tempat kita menggambar dengan pensil warna adalah...", ["Kertas gambar", "Batu kali", "Air"], 0, "Kertas gambar adalah media utama menggambar."],
+                ["🖐️ Tekstur Benda", "🪨 🌵 🧱", "Permukaan batu, kulit nanas, dan pasir jika diraba terasa...", ["Kasar", "Halus", "Licin"], 0, "Batu dan pasir memiliki tekstur permukaan kasar."],
+                ["🖐️ Tekstur Benda", "🪞 🪟 🍎", "Permukaan kaca cermin dan kulit buah apel terasa...", ["Halus / licin", "Kasar", "Tajam"], 0, "Kaca dan kulit apel memiliki permukaan yang halus."],
+                ["✂️ Teknik Kolase & Gunting", "✂️ 📄 🧴", "Karya seni menempelkan potongan kertas warna atau biji-bijian pada pola gambar disebut...", ["Kolase", "Melukis", "Memahat"], 0, "Kolase dibuat dengan teknik menempel berbagai bahan pada pola gambar."],
+                ["✂️ Teknik Kolase & Gunting", "🧴 📎 ✨", "Bahan yang digunakan untuk merekatkan potongan kertas saat membuat kolase adalah...", ["Lem kertas", "Air putih", "Bedak"], 0, "Lem merekatkan potongan kertas agar menempel kuat."],
+                ["✂️ Teknik Kolase & Gunting", "✂️ ✋ ⚠️", "Saat menggunakan gunting untuk memotong kertas, kita harus...", ["Berhati-hati dan didampingi orang dewasa", "Sambil berlari", "Mengarahkannya ke teman"], 0, "Gunting benda tajam sehingga harus dipakai dengan hati-hati."],
+                ["🖐️ Teknik Mencetak (Stempel)", "🖐️ 🎨 📄", "Mencelupkan telapak tangan atau potongan belimbing ke cat lalu menekankannya ke kertas disebut teknik...", ["Mencetak / cap", "Melipat", "Menganyam"], 0, "Teknik cetak (stempel) menghasilkan jejak bentuk benda di kertas."],
+                ["🏺 Karya 2 Dimensi & 3 Dimensi", "🖼️ 📄 🎨", "Lukisan dan gambar di atas kertas termasuk karya seni rupa ... dimensi.", ["2 (Dua)", "3 (Tiga)", "4 (Empat)"], 0, "Karya 2 dimensi hanya memiliki panjang dan lebar (datar)."],
+                ["🏺 Karya 2 Dimensi & 3 Dimensi", "🏺 🗿 🧸", "Patung, vas bunga, dan boneka yang bisa dilihat dari segala arah termasuk karya ... dimensi.", ["3 (Tiga)", "2 (Dua)", "1 (Satu)"], 0, "Karya 3 dimensi memiliki panjang, lebar, tinggi, dan ruang."],
+                ["🏺 Karya 2 Dimensi & 3 Dimensi", "🧱 🌈 👐", "Lilin mainan lunak yang mudah dibentuk menjadi hewan atau buah disebut...", ["Plastisin", "Kertas HVS", "Kaca"], 0, "Plastisin adalah bahan lunak untuk membuat karya 3 dimensi."],
+                ["🌳 Menggambar Pemandangan", "⛰️ ☀️ 🌾", "Saat menggambar pemandangan sawah dan pegunungan, warna daun padi sebaiknya...", ["Hijau atau kuning", "Hitam pekat", "Ungu tua"], 0, "Padi muda berwarna hijau dan padi siap panen berwarna kuning."],
+                ["🌳 Menggambar Pemandangan", "☁️ 🌤️ 🔵", "Awan di langit cerah biasanya diberi warna...", ["Putih atau biru muda", "Hitam", "Merah"], 0, "Awan cerah berwarna putih bersih di langit biru."],
+                ["🎭 Topeng & Hiasan", "🎭 😊 🎨", "Karya seni rupa yang dipakai untuk menutupi wajah dalam tarian atau drama adalah...", ["Topeng", "Mahkota", "Gelang"], 0, "Topeng menggambarkan karakter wajah tertentu."],
+                ["🧹 Kebersihan Setelah Berkarya", "🎨 🧼 👐", "Setelah selesai melukis dengan cat air atau finger painting, tangan kita harus...", ["Dicuci bersih dengan sabun", "Diusapkan ke baju", "Dibiarkan kotor"], 0, "Mencuci tangan menjaga kebersihan diri dan pakaian."],
+                ["👏 Apresiasi Karya Seni", "🖼️ 👏 😊", "Melihat gambar teman yang rapi dan indah, sikap kita sebaiknya...", ["Memuji dan menghargainya", "Mencoret gambarnya", "Merobeknya"], 0, "Menghargai karya orang lain disebut apresiasi seni."],
+                ["✏️ Sketsa Gambar", "✏️ 📄 ✨", "Rancangan gambar tipis menggunakan pensil sebelum diwarnai disebut...", ["Sketsa", "Bingkai", "Pigura"], 0, "Sketsa dibuat tipis agar mudah dihapus jika ada bagian yang diperbaiki."],
+                ["🌈 Warna Pelangi", "🌈 🌧️ ☀️", "Pelangi yang muncul setelah hujan memiliki banyak warna yang...", ["Indah dan beragam", "Hitam saja", "Putih saja"], 0, "Pelangi memiliki susunan warna merah, jingga, kuning, hijau, biru, nila, ungu."]
+            ],
+
+            // 9. SENI MUSIK (30 SOAL)
+            senimusik: [
+                ["🔊 Sumber Bunyi", "🍃 🌊 ⚡", "Suara angin bertiup, ombak laut, dan petir termasuk bunyi...", ["Alam", "Buatan", "Alat musik"], 0, "Bunyi alam dihasilkan oleh peristiwa dan makhluk di alam secara alami."],
+                ["🔊 Sumber Bunyi", "🔔 🚗 👏", "Suara bel sekolah, klakson mobil, dan tepuk tangan termasuk bunyi...", ["Buatan", "Alam", "Hewan"], 0, "Bunyi buatan dihasilkan oleh benda buatan manusia atau aktivitas manusia."],
+                ["🐾 Suara Hewan", "🐓 🌅 🎶", "Hewan ayam jantan di pagi hari berbunyi...", ["Kukuruyuk", "Meong", "Guk-guk"], 0, "Ayam jantan berkokok 'kukuruyuk' di pagi hari."],
+                ["🐾 Suara Hewan", "🐄 🌾 🎶", "Suara hewan sapi adalah...", ["Mooo", "Mbek", "Cit-cit"], 0, "Sapi mengeluarkan bunyi lenguhan 'mooo'."],
+                ["👏 Anggota Tubuh Penghasil Bunyi", "👏 🖐️ 🎶", "Mengadu kedua telapak tangan menghasilkan bunyi...", ["Tepuk tangan", "Petik jari", "Hentak kaki"], 0, "Tepuk tangan menghasilkan bunyi ritmis yang ceria."],
+                ["👏 Anggota Tubuh Penghasil Bunyi", "🦶 🪵 🎶", "Menghentakkan kaki ke lantai secara teratur menghasilkan bunyi...", ["Hentakan kaki", "Siulan", "Tepuk bahu"], 0, "Hentakan kaki dapat menjadi pengiring irama lagu."],
+                ["⏱️ Tempo Lagu", "🐢 🎶 💤", "Lagu yang dinyanyikan dengan ketukan lambat dan tenang memiliki tempo...", ["Lambat", "Cepat", "Keras"], 0, "Tempo adalah cepat atau lambatnya sebuah lagu dinyanyikan."],
+                ["⏱️ Tempo Lagu", "🐇 🎶 🎉", "Lagu anak yang gembira seperti 'Naik Delman' dinyanyikan dengan tempo...", ["Cepat / riang", "Sangat sedih", "Lambat sekali"], 0, "Lagu riang gembira dinyanyikan dengan tempo cepat dan bersemangat."],
+                ["🔊 Dinamika (Kuat Lemah Bunyi)", "🤫 👶 🎶", "Saat menyanyikan lagu pengantar tidur untuk adik bayi, suara kita harus...", ["Lembut / pelan", "Berteriak keras", "Sangat kencang"], 0, "Suara lembut membuat bayi tidur nyenyak."],
+                ["🔊 Dinamika (Kuat Lemah Bunyi)", "🥁 💥 🔊", "Memukul drum dengan tenaga kuat menghasilkan bunyi yang...", ["Keras / nyaring", "Lemah", "Hilang"], 0, "Pukulan kuat menghasilkan getaran besar dan bunyi keras."],
+                ["🎵 Lagu Anak-Anak", "🎵 Balonku Ada Lima 🎈", "Dalam lagu 'Balonku', balon warna apa yang meletus?", ["Hijau", "Merah muda", "Biru"], 0, "Lirik lagu: 'Meletus balon hijau, dor!'."],
+                ["🎵 Lagu Anak-Anak", "🎵 Bintang Kecil ⭐", "Di manakah bintang kecil berada dalam lagu 'Bintang Kecil'?", ["Di langit yang tinggi", "Di dasar laut", "Di dalam rumah"], 0, "Lirik lagu: 'Bintang kecil di langit yang tinggi'."],
+                ["🎵 Lagu Anak-Anak", "🎵 Pelangi-Pelangi 🌈", "Lagu 'Pelangi-Pelangi' diciptakan oleh...", ["A.T. Mahmud", "Ibu Sud", "W.R. Supratman"], 0, "Pelangi-Pelangi adalah lagu anak populer ciptaan A.T. Mahmud."],
+                ["🎵 Lagu Anak-Anak", "🎵 Kasih Ibu ❤️", "Dalam lagu 'Kasih Ibu', kasih ibu kepada beta tak terhingga sepanjang...", ["Masa", "Hari", "Minggu"], 0, "Lirik lagu: 'Kasih ibu kepada beta tak terhingga sepanjang masa'."],
+                ["🎵 Lagu Anak-Anak", "🎵 Topi Saya Bundar 👒", "Dalam lagu 'Topi Saya Bundar', kalau tidak bundar berarti...", ["Bukan topi saya", "Topi ayah", "Topi baru"], 0, "Lirik lagu: 'Kalau tidak bundar, bukan topi saya'."],
+                ["🎵 Lagu Wajib Nasional", "🎵 Garuda Pancasila 🦅", "Lagu 'Garuda Pancasila' dinyanyikan dengan sikap...", ["Tegak dan bersemangat", "Sambil tidur", "Sambil bercanda"], 0, "Lagu nasional dinyanyikan dengan sikap hormat dan penuh semangat."],
+                ["🎸 Alat Musik Ritmis & Melodis", "🔺 🥢 🔔", "Alat musik berbentuk segitiga dari logam yang dipukul dengan stik besi adalah...", ["Triangle", "Gitar", "Pianika"], 0, "Triangle adalah alat musik ritmis berbentuk segitiga."],
+                ["🎸 Alat Musik Ritmis & Melodis", "🪇 🎶 💃", "Alat musik yang berisi butiran kecil dan dibunyikan dengan digoyangkan adalah...", ["Marakas", "Piano", "Biola"], 0, "Marakas menghasilkan bunyi gemericik saat digoyangkan."],
+                ["🎸 Alat Musik Ritmis & Melodis", "🎹 💨 🎶", "Alat musik yang dimainkan dengan cara ditiup sambil menekan tuts adalah...", ["Pianika", "Drum", "Gitar"], 0, "Pianika ditiup lewat selang dan ditekan tutsnya untuk menghasilkan nada."],
+                ["🎸 Alat Musik Ritmis & Melodis", "🎸 🎶 🖐️", "Alat musik berdawai/senar yang dimainkan dengan cara dipetik adalah...", ["Gitar", "Tamborin", "Gong"], 0, "Gitar menghasilkan nada merdu saat senarnya dipetik."],
+                ["🎸 Alat Musik Ritmis & Melodis", "🥁 🥢 🎶", "Alat musik drum dan bedug dimainkan dengan cara...", ["Dipukul", "Ditiup", "Digesek"], 0, "Drum dipukul menggunakan stik drum."],
+                ["🎼 Mengenal Nada", "Do — Re — Mi — Fa — Sol — La — Si", "Urutan bunyi yang teratur tinggi rendahnya disebut...", ["Nada", "Warna", "Garis"], 0, "Nada adalah bunyi yang beraturan frekuensinya."],
+                ["🎼 Mengenal Nada", "1 (Do)  🆚  7 (Si)", "Nada 'Do' (1) terdengar lebih ... daripada nada 'Si' (7).", ["Rendah", "Tinggi", "Cepat"], 0, "Urutan tangga nada naik dari Do (rendah) menuju Si (tinggi)."],
+                ["🎤 Bernyanyi", "🎤 😊 🎶", "Saat bernyanyi bersama teman-teman di kelas (paduan suara), kita harus bernyanyi dengan...", ["Kompak dan selaras", "Saling mendahului", "Berteriak sendiri"], 0, "Kekompakan membuat nyanyian bersama terdengar indah."],
+                ["🎤 Bernyanyi", "🧍‍♂️ 🌬️ 🎤", "Posisi tubuh yang baik saat bernyanyi berdiri adalah...", ["Badan tegak dan dada terbuka", "Membungkuk", "Menunduk ke lantai"], 0, "Berdiri tegak membantu pernapasan saat bernyanyi."],
+                ["🫙 Alat Musik Sederhana", "🍶 🍚 🎶", "Botol plastik bekas yang diisi beras atau kacang hijau dapat dijadikan alat musik...", ["Marakas sederhana", "Seruling", "Gitar"], 0, "Botol berisi biji-bijian menghasilkan bunyi ritmis saat digoyang."],
+                ["🫙 Alat Musik Sederhana", "🥛 🥄 🎶", "Gelas kaca yang diisi air berbeda ketinggian lalu diketuk sendok akan menghasilkan...", ["Bunyi nada berbeda-beda", "Tidak ada bunyi", "Warna baru"], 0, "Perbedaan tinggi air menghasilkan tinggi rendah nada yang berbeda."],
+                ["🎶 Irama Lagu", "👏 1 - 2 - 3 - 4", "Ketukan yang teratur dalam sebuah lagu disebut...", ["Irama / birama", "Judul", "Pencipta"], 0, "Irama mengatur keteraturan ketukan dalam musik."],
+                ["👂 Mendengarkan Musik", "🎧 🎶 😊", "Mendengarkan musik yang lembut dan ceria dapat membuat hati terasa...", ["Tenang dan gembira", "Marah", "Takut"], 0, "Musik yang baik menenangkan perasaan dan menghibur."],
+                ["👏 Menghargai Pemusik", "🎤 👏 🌟", "Setelah teman selesai menyanyikan lagu di depan kelas, kita memberikan...", ["Tepuk tangan meriah", "Ejekan", "Suara bising"], 0, "Tepuk tangan adalah bentuk penghargaan kepada teman yang tampil."]
+            ],
+
+            // 10. PJOK (30 SOAL)
+            pjok: [
+                ["🏃 Gerak Dasar Lokomotor", "🚶‍♂️ ➡️ 🏫", "Gerakan melangkahkan kaki secara bergantian dengan santai disebut...", ["Berjalan", "Berlari", "Melompat"], 0, "Berjalan adalah gerakan melangkahkan kaki bergantian dengan santai."],
+                ["🏃 Gerak Dasar Lokomotor", "🏃‍♂️💨 🏁", "Saat berlari, gerakan langkah kaki kita menjadi lebih...", ["Lambat", "Cepat", "Diam di tempat"], 1, "Berlari membuat langkah kaki bergerak lebih cepat daripada berjalan."],
+                ["🏃 Gerak Dasar Lokomotor", "🐸 ⬆️ 💦", "Hewan katak bergerak berpindah tempat dengan cara...", ["Merangkak", "Meloncat", "Berjalan"], 1, "Katak menolakkan kedua kakinya untuk meloncat."],
+                ["🏃 Gerak Dasar Lokomotor", "🦘 ➡️ 🎯", "Gerakan menolakkan tubuh dengan satu kaki ke depan disebut...", ["Melompat", "Membungkuk", "Mengayun"], 0, "Melompat menggunakan tumpuan satu kaki."],
+                ["🏃 Gerak Dasar Lokomotor", "👶 🐾 🏠", "Gerakan maju menggunakan kedua tangan dan lutut menyentuh lantai disebut...", ["Berlari", "Merangkak", "Meloncat"], 1, "Merangkak bertumpu pada kedua telapak tangan dan lutut."],
+                ["🏃 Gerak Dasar Lokomotor", "🏃‍♀️ 🏁 ✨", "Berjalan, berlari, dan melompat termasuk gerak berpindah tempat yang disebut gerak...", ["Lokomotor", "Non-lokomotor", "Manipulatif"], 0, "Gerak berpindah tempat disebut gerak dasar lokomotor."],
+                ["🤸 Gerak Non-Lokomotor", "🙆‍♂️ 🔄 🎶", "Gerakan memutar kedua lengan di tempat termasuk gerak...", ["Berpindah tempat", "Non-lokomotor", "Melempar"], 1, "Gerak tanpa berpindah tempat disebut gerak non-lokomotor."],
+                ["🤸 Gerak Non-Lokomotor", "🙇‍♂️ 👟 ✨", "Membungkukkan badan ke depan dengan tangan menyentuh ujung kaki melatih kelenturan...", ["Punggung dan pinggang", "Telinga", "Mata"], 0, "Membungkuk melatih kelenturan otot punggung dan pinggang."],
+                ["🤸 Gerak Non-Lokomotor", "🦩 🧍‍♂️ ⚖️", "Berdiri dengan satu kaki menirukan burung bangau melatih...", ["Kecepatan lari", "Keseimbangan tubuh", "Kekuatan melempar"], 1, "Berdiri dengan satu kaki melatih keseimbangan tubuh agar tidak jatuh."],
+                ["🤸 Gerak Non-Lokomotor", "💪 ↔️ 🚶‍♂️", "Saat berjalan tegak, kedua lengan kita sebaiknya...", ["Diayun di samping badan", "Dimasukkan ke saku", "Dilipat di dada"], 0, "Mengayun lengan secara bergantian menjaga keseimbangan saat berjalan."],
+                ["🤸 Gerak Non-Lokomotor", "🦵 ⬇️ 🐸", "Saat mendarat setelah meloncat, kedua lutut sebaiknya sedikit...", ["Diluruskan kaku", "Ditekuk (mengeper)", "Diangkat tinggi"], 1, "Menekuk lutut saat mendarat mencegah cedera pada kaki."],
+                ["🤸 Gerak Non-Lokomotor", "🧍‍♀️ ↔️ 👀", "Menolehkan kepala ke kanan dan ke kiri melatih kelenturan otot...", ["Leher", "Lutut", "Perut"], 0, "Menoleh ke kanan dan kiri melenturkan otot leher."],
+                ["⚽ Gerak Manipulatif", "🤾‍♂️ ⚾ 🎯", "Gerakan mengarahkan bola ke keranjang atau teman menggunakan tangan disebut...", ["Menendang bola", "Melempar bola", "Menyundul bola"], 1, "Melempar bola dilakukan menggunakan ayunan tangan."],
+                ["⚽ Gerak Manipulatif", "🤲 🏀 👀", "Saat menangkap bola yang datang, pandangan mata harus tertuju ke arah...", ["Bola", "Langit", "Sepatu"], 0, "Pandangan fokus ke bola agar bola tertangkap dengan tepat."],
+                ["⚽ Gerak Manipulatif", "⚽ 👟 🥅", "Dalam permainan sepak bola, bola digerakkan dengan cara...", ["Dipukul", "Ditendang", "Dilempar"], 1, "Sepak bola dimainkan dengan cara menendang bola menggunakan kaki."],
+                ["⚽ Gerak Manipulatif", "🏏 ⚾ 🏃‍♂️", "Dalam permainan kasti, alat pemukul digunakan untuk...", ["Memukul bola", "Menendang bola", "Menangkap bola"], 0, "Tongkat pemukul kasti digunakan untuk memukul bola."],
+                ["⚽ Gerak Manipulatif", "⛹️‍♂️ 🏀 🖐️", "Memantul-mantulkan bola basket ke lantai dilakukan menggunakan...", ["Telapak tangan", "Lutut", "Siku"], 0, "Bola basket dipantulkan (dribble) menggunakan telapak tangan dan jari."],
+                ["🪑 Sikap Tubuh Benar", "🪑 ✍️ 📖", "Sikap duduk yang benar saat menulis dan belajar di kelas adalah...", ["Membungkuk di meja", "Duduk tegak", "Tiduran di kursi"], 1, "Duduk tegak menjaga kesehatan tulang punggung dan mata."],
+                ["🪑 Sikap Tubuh Benar", "🧍‍♂️ 🇮🇩 ☀️", "Saat mengikuti upacara bendera, sikap berdiri yang benar adalah...", ["Berdiri tegak pandangan ke depan", "Berdiri sambil membungkuk", "Bersandar pada teman"], 0, "Sikap sempurna saat upacara adalah berdiri tegak dan pandangan lurus ke depan."],
+                ["🪑 Sikap Tubuh Benar", "🚶‍♀️ 👀 🛣️", "Saat berjalan ke depan, pandangan mata kita sebaiknya mengarah ke...", ["Depan", "Belakang", "Atas langit"], 0, "Pandangan ke depan agar kita tidak tersandung atau menabrak."],
+                ["🧼 Kebersihan & Kesehatan", "🧼 👐 💧", "Sebelum makan, kita harus mencuci tangan menggunakan air bersih dan...", ["Sabun", "Tanah", "Minyak"], 0, "Sabun dan air mengalir membunuh kuman di tangan sebelum makan."],
+                ["🧼 Kebersihan & Kesehatan", "🪥 😁 🌙", "Kita sebaiknya menggosok gigi secara teratur setelah sarapan dan sebelum...", ["Bermain bola", "Tidur malam", "Mandi pagi"], 1, "Menggosok gigi sebelum tidur mencegah gigi berlubang akibat sisa makanan."],
+                ["🧼 Kebersihan & Kesehatan", "🚿 🧴 ✨", "Agar badan selalu bersih, segar, dan tidak bau, kita mandi sehari sebanyak...", ["2 kali (pagi dan sore)", "1 minggu sekali", "Tidak perlu mandi"], 0, "Mandi 2 kali sehari menjaga kebersihan kulit dari keringat dan debu."],
+                ["🧼 Kebersihan & Kesehatan", "💅 ✂️ 🖐️", "Kuku tangan dan kaki yang sudah panjang dan kotor sebaiknya segera...", ["Dipotong", "Dicat warna", "Dibiarkan panjang"], 0, "Memotong kuku secara rutin mencegah kuman bersarang di bawah kuku."],
+                ["🧼 Kebersihan & Kesehatan", "👕 💦 🧺", "Pakaian olahraga yang sudah basah terkena keringat sebaiknya segera...", ["Diganti dengan pakaian bersih", "Dipakai tidur", "Disimpan di dalam tas"], 0, "Mengganti pakaian basah mencegah gatal-gatal dan masuk angin."],
+                ["🥗 Makanan Bergizi & Istirahat", "🍚 🐟 🥬 🍌 🥛", "Makanan sehat bergizi seimbang disempurnakan dengan minum...", ["Susu", "Minuman bersoda", "Kopi"], 0, "Susu melengkapi gizi makanan sehat untuk pertumbuhan tulang."],
+                ["🥗 Makanan Bergizi & Istirahat", "🛌 💤 ⏰", "Istirahat yang paling baik untuk mengembalikan tenaga tubuh adalah...", ["Tidur cukup", "Menonton TV semalaman", "Bermain game terus"], 0, "Tidur yang cukup membuat tubuh kembali bugar dan sehat keesokan harinya."],
+                ["🤸‍♂️ Keselamatan Olahraga", "🙆‍♀️ ⏱️ ⚽", "Sebelum memulai olahraga, kita wajib melakukan pemanasan agar otot tidak...", ["Cedera atau kram", "Menjadi kuat", "Sehat"], 0, "Pemanasan menyiapkan otot dan sendi agar terhindar dari cedera."],
+                ["🤸‍♂️ Keselamatan Olahraga", "🧘‍♂️ 🌬️ ✨", "Setelah selesai berolahraga, kita melakukan gerakan pendinginan agar tubuh kembali...", ["Rileks dan tenang", "Lelah sekali", "Kaku"], 0, "Pendinginan menurunkan detak jantung secara perlahan agar tubuh rileks."],
+                ["🤸‍♂️ Keselamatan Olahraga", "👟 🏟️ 🏃‍♂️", "Saat pelajaran olahraga di lapangan, alas kaki yang paling aman dipakai adalah...", ["Sepatu olahraga", "Sandal jepit", "Sepatu hak tinggi"], 0, "Sepatu olahraga melindungi kaki dan tidak licin saat berlari."]
+            ],
+
+            // 11. BAHASA INDONESIA (30 SOAL)
+            indonesia: [
+                ["🔤 Huruf Vokal & Konsonan", "a — i — u — e — ...", "Huruf vokal (huruf hidup) yang melengkapi urutan di atas adalah...", ["o", "b", "k"], 0, "Lima huruf vokal dalam abjad adalah a, i, u, e, dan o."],
+                ["🔤 Huruf Vokal & Konsonan", "⚽ b - o - l - a", "Huruf pertama pada kata 'bola' adalah huruf...", ["o", "b", "a"], 1, "Kata 'bola' diawali oleh huruf konsonan 'b'."],
+                ["🔤 Huruf Vokal & Konsonan", "👧🏽 dini ➡️ Dini", "Penulisan nama orang yang benar menggunakan huruf kapital di awal adalah...", ["dini", "Dini", "dInI"], 1, "Huruf pertama pada nama orang selalu ditulis menggunakan huruf kapital (Dini)."],
+                ["🔤 Huruf Vokal & Konsonan", "🍎 a - p - e - l", "Huruf vokal yang terdapat pada kata 'apel' adalah...", ["a dan e", "p dan l", "a dan p"], 0, "Pada kata 'apel', huruf vokalnya adalah 'a' dan 'e'."],
+                ["📖 Sikap Membaca & Menulis", "🪑 📖 👀", "Saat membaca buku, jarak antara mata dan buku sebaiknya tidak terlalu...", ["Dekat", "Rapi", "Terang"], 0, "Membaca terlalu dekat atau sambil tiduran dapat merusak kesehatan mata."],
+                ["📖 Sikap Membaca & Menulis", "💡 📚 🌞", "Kita sebaiknya membaca buku di tempat yang...", ["Gelap gulita", "Terang cukup cahaya", "Bising sekali"], 1, "Cahaya yang terang membuat tulisan terbaca jelas dan mata tidak cepat lelah."],
+                ["🧩 Merangkai Suku Kata", "📚 bu + ku", "Suku kata 'bu' dan 'ku' jika digabung dibaca...", ["baku", "buku", "kuku"], 1, "Gabungan suku kata bu + ku membentuk kata 'buku'."],
+                ["🧩 Merangkai Suku Kata", "🦋 ku - pu - ku - pu", "Hewan cantik bersayap warna-warni ini diawali suku kata...", ["ku-", "ka-", "ki-"], 0, "Kata 'kupu-kupu' diawali oleh suku kata 'ku-'."],
+                ["🧩 Merangkai Suku Kata", "🍌 ... - sang", "Suku kata yang tepat untuk melengkapi nama buah berwarna kuning di atas adalah...", ["pa", "pi", "pu"], 1, "Jika dilengkapi suku kata 'pi', kata tersebut menjadi 'pisang'."],
+                ["🧩 Merangkai Suku Kata", "👟 se - pa - tu", "Pemenggalan suku kata yang benar untuk kata 'sepatu' adalah...", ["sep - atu", "se - pa - tu", "sepa - tu"], 1, "Kata 'sepatu' terdiri dari tiga suku kata: se - pa - tu."],
+                ["🧩 Merangkai Suku Kata", "👀 ma + ta", "Suku kata 'ma' dan 'ta' jika digabungkan membentuk kata...", ["mata", "meja", "madu"], 0, "Suku kata ma + ta dibaca 'mata'."],
+                ["🧩 Merangkai Suku Kata", "🐘 ga - jah", "Hewan bertubuh besar berbelalai panjang ini diawali suku kata...", ["ga-", "gi-", "gu-"], 0, "Kata 'gajah' diawali oleh suku kata 'ga-'."],
+                ["🧩 Merangkai Suku Kata", "🍉 se - mang - ka", "Kata 'semangka' terdiri dari berapa suku kata?", ["2 suku kata", "3 suku kata", "4 suku kata"], 1, "se - mang - ka terdiri dari 3 suku kata."],
+                ["🎒 Kosakata Sekitar Kita", "✏️ 📓 📏", "Benda yang digunakan untuk menghapus tulisan pensil yang salah adalah...", ["Penggaris", "Penghapus", "Rautan"], 1, "Penghapus digunakan untuk membersihkan coretan pensil di kertas."],
+                ["🎒 Kosakata Sekitar Kita", "📚 🤫 🏫", "Ruangan di sekolah tempat siswa meminjam dan membaca banyak buku disebut...", ["Kantin", "Perpustakaan", "Lapangan"], 1, "Perpustakaan adalah tempat menyimpan dan membaca buku pelajaran maupun cerita."],
+                ["🎒 Kosakata Sekitar Kita", "🚦 🔴 🟡 🟢", "Saat lampu lalu lintas menyala warna merah, semua kendaraan harus...", ["Berhenti", "Berjalan cepat", "Membunyikan klakson"], 0, "Lampu merah pada lampu lalu lintas berarti berhenti."],
+                ["🔄 Lawan Kata Sederhana", "🐘 🆚 🐜", "Gajah bertubuh besar, sedangkan semut bertubuh...", ["Tinggi", "Kecil", "Panjang"], 1, "Lawan kata dari 'besar' adalah 'kecil'."],
+                ["🔄 Lawan Kata Sederhana", "☀️ 🆚 🌙", "Pada siang hari langit tampak terang, sedangkan pada malam hari tampak...", ["Gelap", "Panas", "Cerah"], 0, "Lawan kata dari 'terang' adalah 'gelap'."],
+                ["🔄 Lawan Kata Sederhana", "🧊 🆚 🔥", "Es batu terasa dingin, sedangkan air mendidih terasa...", ["Sejuk", "Panas", "Manis"], 1, "Lawan kata dari 'dingin' adalah 'panas'."],
+                ["💬 Kata Santun & Ajakan", "🎁 😊 🙏", "Setelah diberi hadiah pensil warna oleh ayah, kita mengucapkan...", ["Maaf ya, Ayah", "Terima kasih, Ayah", "Permisi, Ayah"], 1, "Kita mengucapkan 'terima kasih' saat menerima bantuan atau pemberian."],
+                ["💬 Kata Santun & Ajakan", "📚 ⬆️ 🤝", "Raka tidak sampai mengambil buku di rak atas. Raka meminta bantuan kakak dengan kata...", ["Tolong", "Maaf", "Selamat tinggal"], 0, "Gunakan kata 'tolong' saat meminta bantuan orang lain dengan sopan."],
+                ["💬 Kata Santun & Ajakan", "🥛 💥 😔", "Siti tidak sengaja menyenggol gelas teman hingga tumpah. Siti segera berkata...", ["Terima kasih", "Maaf, aku tidak sengaja", "Tolong ambilkan"], 1, "Mengucapkan 'maaf' menunjukkan sikap bertanggung jawab saat berbuat salah."],
+                ["💬 Kata Santun & Ajakan", "🌱 🌳 💧", "Manakah di bawah ini yang termasuk kalimat ajakan menjaga lingkungan?", ["Mari kita menanam pohon di halaman!", "Siapa yang menanam pohon ini?", "Pohon di halaman sangat tinggi."], 0, "'Mari kita menanam pohon di halaman!' adalah kalimat ajakan."],
+                ["💬 Kata Santun & Ajakan", "🌅 🏫 👩🏻‍🏫", "Saat bertemu Ibu Guru di gerbang sekolah pada pagi hari, kita menyapa...", ["Selamat malam, Bu", "Selamat pagi, Bu Guru", "Sampai besok, Bu"], 1, "Sapaan yang tepat di waktu pagi adalah 'Selamat pagi'."],
+                ["✍️ Tanda Baca & Kalimat", "Budi bermain bola ...", "Tanda baca yang tepat untuk mengakhiri kalimat berita di atas adalah...", ["Tanda titik ( . )", "Tanda tanya ( ? )", "Tanda koma ( , )"], 0, "Kalimat berita atau pernyataan diakhiri dengan tanda titik (.)."],
+                ["✍️ Tanda Baca & Kalimat", "Di mana rumahmu ...", "Tanda baca yang tepat di akhir kalimat 'Di mana rumahmu ...' adalah...", ["Tanda tanya ( ? )", "Tanda titik ( . )", "Tanda koma ( , )"], 0, "Kata 'Di mana' menanyakan tempat sehingga kalimat diakhiri tanda tanya (?)."],
+                ["✍️ Tanda Baca & Kalimat", "buku — membaca — Ibu", "Susunan kata-kata di atas menjadi kalimat yang benar adalah...", ["Ibu membaca buku.", "Buku membaca ibu.", "Membaca buku ibu."], 0, "Susunan yang tepat adalah Subjek (Ibu) + Predikat (membaca) + Objek (buku)."],
+                ["📘 Pemahaman Bacaan Pendek", "📖 Rina menyiram bunga mawar di halaman pada hari Minggu pagi.", "Kapan Rina membantu ibu menyiram bunga?", ["Hari Senin sore", "Hari Minggu pagi", "Hari Jumat malam"], 1, "Pada bacaan disebutkan 'Hari Minggu pagi, Rina menyiram bunga'."],
+                ["📘 Pemahaman Bacaan Pendek", "📖 Deni bersepeda di taman kota setiap Sabtu sore dan selalu memakai helm.", "Apa yang selalu dipakai Deni saat bersepeda agar aman?", ["Payung", "Helm", "Jas hujan"], 1, "Bacaan menjelaskan 'Deni selalu memakai helm agar aman'."],
+                ["📘 Pemahaman Bacaan Pendek", "📖 Lani suka makan buah pepaya yang rasanya manis dan warnanya jingga.", "Bagaimana rasa buah pepaya yang disukai Lani?", ["Asam", "Manis", "Pedas"], 1, "Pada bacaan disebutkan 'Buah pepaya rasanya manis dan warnanya jingga'."]
+            ]
+        };
+
+        // Konversi format array ringkas menjadi objek soal terstruktur
+        const SUBJECT_QUESTIONS = {};
+        Object.keys(RAW_QUESTION_BANKS).forEach(subjKey => {
+            SUBJECT_QUESTIONS[subjKey] = RAW_QUESTION_BANKS[subjKey].map((item, index) => ({
+                id: index + 1,
+                category: item[0],
+                visual: item[1],
+                question: item[2],
+                options: item[3],
+                correctIndex: item[4],
+                explanation: item[5]
+            }));
+        });
+
+        // =========================================================================
+        // EFEK SUARA WEB AUDIO API
+        // =========================================================================
+        const soundFX = {
+            ctx: null,
+            getContext() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                return this.ctx;
+            },
+            playTone(freq, type, duration, startOffset = 0, gainVal = 0.15) {
+                try {
+                    const ctx = this.getContext();
+                    if (!ctx) return;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + startOffset);
+                    gain.gain.setValueAtTime(gainVal, ctx.currentTime + startOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startOffset + duration);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + startOffset);
+                    osc.stop(ctx.currentTime + startOffset + duration);
+                } catch (e) {}
+            },
+            playClick() { this.playTone(520, 'sine', 0.08, 0, 0.1); },
+            playCorrect() {
+                this.playTone(523.25, 'triangle', 0.12, 0, 0.18);
+                this.playTone(659.25, 'triangle', 0.12, 0.09, 0.18);
+                this.playTone(783.99, 'triangle', 0.22, 0.18, 0.2);
+            },
+            playWrong() {
+                this.playTone(329.63, 'sine', 0.14, 0, 0.15);
+                this.playTone(261.63, 'sine', 0.22, 0.12, 0.15);
+            },
+            playFanfare() {
+                this.playTone(523.25, 'triangle', 0.12, 0, 0.2);
+                this.playTone(659.25, 'triangle', 0.12, 0.1, 0.2);
+                this.playTone(783.99, 'triangle', 0.12, 0.2, 0.2);
+                this.playTone(1046.5, 'triangle', 0.35, 0.3, 0.22);
+            },
+            playAlert() {
+                this.playTone(660, 'sine', 0.15, 0, 0.2);
+                this.playTone(880, 'sine', 0.25, 0.16, 0.2);
+            }
+        };
+
+        // =========================================================================
+        // STATE & ARSITEKTUR KONEKSI REAL-TIME
+        // =========================================================================
+        const PARENT_PIN = '1234';
+        const DEFAULT_CHILD_NAME = 'Alvin';
+        const state = {
+            selectedSubject: 'matematika',
+            roomCode: 'KELAS1',
+            role: null, // 'anak' | 'ortu'
+            childName: DEFAULT_CHILD_NAME,
+            peer: null,
+            connections: [],
+            parentConn: null,
+            reconnectTimer: null,
+            autoNextTimer: null,
+            broadcastChannel: null,
+            isPeerConnected: false,
+            pinActionCallback: null,
+            parentFilter: 'all',
+            celebrationShown: false,
+            currentQrUrl: '',
+            sessionData: {
+                subjectId: 'matematika',
+                roomCode: 'KELAS1',
+                childName: DEFAULT_CHILD_NAME,
+                activeQuestionIndex: 0,
+                answers: {},
+                score: 0,
+                correctCount: 0,
+                wrongCount: 0,
+                helpRequest: null,
+                updatedAt: Date.now()
+            }
+        };
+
+        function getSubjectMeta(subjId) {
+            return SUBJECT_LIST.find(s => s.id === subjId) || SUBJECT_LIST[0];
+        }
+
+        function getActiveQuestions() {
+            const subjId = state.sessionData.subjectId || state.selectedSubject || 'matematika';
+            return SUBJECT_QUESTIONS[subjId] || SUBJECT_QUESTIONS.matematika;
+        }
+
+        function getStorageKey(room, subjId) {
+            return `paket9_sd1_${room}_${subjId}`;
+        }
+
+        function loadLocalSession(room, subjId) {
+            try {
+                const raw = localStorage.getItem(getStorageKey(room, subjId));
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return null;
+        }
+
+        function saveLocalSession(room, subjId, data) {
+            try {
+                localStorage.setItem(getStorageKey(room, subjId), JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 2800);
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '-';
+            const d = new Date(ts);
+            return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // =========================================================================
+        // LOGIKA UTAMA APLIKASI
+        // =========================================================================
+        window.app = {
+            init() {
+                this.renderSubjectCards();
+                this.populateParentDropdown();
+                lucide.createIcons();
+
+                const params = new URLSearchParams(window.location.search);
+                const paramRoom = params.get('room');
+                const paramRole = params.get('role');
+                const paramSubj = params.get('subject');
+
+                if (paramSubj && SUBJECT_QUESTIONS[paramSubj]) {
+                    this.selectHomeSubject(paramSubj);
+                } else {
+                    this.selectHomeSubject('matematika');
+                }
+
+                if (paramRoom) {
+                    const cleanRoom = paramRoom.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+                    document.getElementById('input-room-code').value = cleanRoom || 'KELAS1';
+                } else {
+                    document.getElementById('input-room-code').value = 'KELAS1';
+                }
+
+                if (paramRole === 'anak' || paramRole === 'child') {
+                    this.startSession('anak');
+                } else if (paramRole === 'ortu' || paramRole === 'parent') {
+                    this.startSession('ortu');
+                } else {
+                    this.showView('view-home');
+                }
+            },
+
+            renderSubjectCards() {
+                const grid = document.getElementById('subject-selector-grid');
+                grid.innerHTML = '';
+
+                SUBJECT_LIST.forEach(subj => {
+                    const isSelected = state.selectedSubject === subj.id;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.onclick = () => {
+                        soundFX.playClick();
+                        this.selectHomeSubject(subj.id);
+                    };
+
+                    btn.className = isSelected
+                        ? 'p-3.5 rounded-2xl border-2 border-indigo-600 bg-indigo-50/90 text-left flex items-start gap-2.5 shadow-sm ring-2 ring-indigo-200 transition'
+                        : 'p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50 text-left flex items-start gap-2.5 transition';
+
+                    btn.innerHTML = `
+                        <span class="text-2xl shrink-0 mt-0.5">${subj.icon}</span>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[11px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">${subj.num}</span>
+                                <span class="font-kids font-bold text-sm sm:text-base text-slate-800 truncate">${subj.name}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-snug">${subj.desc}</p>
+                        </div>
+                    `;
+                    grid.appendChild(btn);
+                });
+            },
+
+            selectHomeSubject(subjId) {
+                state.selectedSubject = subjId;
+                this.renderSubjectCards();
+                const meta = getSubjectMeta(subjId);
+                document.getElementById('home-btn-child-sub').textContent = `Kerjakan 30 soal ${meta.name}`;
+            },
+
+            populateParentDropdown() {
+                const dropdown = document.getElementById('parent-subject-dropdown');
+                dropdown.innerHTML = '';
+                SUBJECT_LIST.forEach(subj => {
+                    const opt = document.createElement('option');
+                    opt.value = subj.id;
+                    opt.textContent = `${subj.num}. ${subj.icon} ${subj.name} (30 Soal)`;
+                    dropdown.appendChild(opt);
+                });
+            },
+
+            generateNewCodeInput() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = '';
+                for (let i = 0; i < 6; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                document.getElementById('input-room-code').value = code;
+            },
+
+            getCurrentFormValues() {
+                const rawRoom = document.getElementById('input-room-code').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const room = rawRoom.length >= 2 ? rawRoom : 'KELAS1';
+                const name = DEFAULT_CHILD_NAME;
+                const subject = state.selectedSubject || 'matematika';
+                return { room, name, subject };
+            },
+
+            copyRoomCode() {
+                const temp = document.createElement('input');
+                temp.value = state.roomCode;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast(`Kode Sesi "${state.roomCode}" disalin!`);
+            },
+
+            buildShareUrl(targetRole) {
+                const room = state.role ? state.roomCode : this.getCurrentFormValues().room;
+                const name = DEFAULT_CHILD_NAME;
+                const subject = state.role ? (state.sessionData.subjectId || state.selectedSubject) : state.selectedSubject;
+                const baseUrl = window.location.href.split('?')[0];
+                return `${baseUrl}?role=${targetRole}&subject=${encodeURIComponent(subject)}&room=${encodeURIComponent(room)}&name=${encodeURIComponent(name)}`;
+            },
+
+            copyDirectLink(targetRole) {
+                const shareUrl = this.buildShareUrl(targetRole);
+                const meta = getSubjectMeta(state.role ? state.sessionData.subjectId : state.selectedSubject);
+                const temp = document.createElement('input');
+                temp.value = shareUrl;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+
+                const label = targetRole === 'anak' ? 'Tab Anak' : 'HP Orang Tua';
+                showToast(`Link ${label} (${meta.name}) disalin!`);
+            },
+
+            openQrModal(targetRole = 'anak') {
+                const shareUrl = this.buildShareUrl(targetRole);
+                const room = state.role ? state.roomCode : this.getCurrentFormValues().room;
+                const meta = getSubjectMeta(state.role ? state.sessionData.subjectId : state.selectedSubject);
+
+                state.currentQrUrl = shareUrl;
+                document.getElementById('qr-session-badge').textContent = `${meta.icon} ${meta.name} • ${room}`;
+                document.getElementById('qr-url-preview').textContent = shareUrl;
+
+                const container = document.getElementById('qr-code-container');
+                container.innerHTML = '';
+
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(container, {
+                        text: shareUrl,
+                        width: 200,
+                        height: 200,
+                        colorDark: '#0f172a',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-xs text-rose-500 font-bold p-4">Gagal memuat QR Code. Periksa koneksi internet.</p>';
+                }
+
+                document.getElementById('qr-modal').classList.remove('hidden');
+                lucide.createIcons();
+            },
+
+            closeQrModal() {
+                document.getElementById('qr-modal').classList.add('hidden');
+            },
+
+            copyQrUrl() {
+                if (!state.currentQrUrl) return;
+                const temp = document.createElement('input');
+                temp.value = state.currentQrUrl;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast('Tautan dari QR Code berhasil disalin!');
+            },
+
+            showView(viewId) {
+                ['view-home', 'view-child', 'view-parent'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(viewId).classList.remove('hidden');
+
+                const headerControls = document.getElementById('header-controls');
+                const subjBadge = document.getElementById('header-subject-badge');
+                if (viewId === 'view-child' || viewId === 'view-parent') {
+                    headerControls.classList.remove('hidden');
+                    subjBadge.classList.remove('hidden');
+                    const meta = getSubjectMeta(state.sessionData.subjectId || state.selectedSubject);
+                    subjBadge.textContent = `${meta.icon} ${meta.name.toUpperCase()}`;
+                    document.getElementById('header-room-code').textContent = state.roomCode;
+                    document.getElementById('switch-role-text').textContent =
+                        viewId === 'view-child' ? 'Mode Orang Tua' : 'Mode Anak';
+                } else {
+                    headerControls.classList.add('hidden');
+                    subjBadge.classList.add('hidden');
+                }
+                lucide.createIcons();
+            },
+
+            requestGoHome() {
+                if (state.role === 'anak') {
+                    this.openPinModal(() => {
+                        this.cleanupConnections();
+                        state.role = null;
+                        this.showView('view-home');
+                    });
+                } else {
+                    this.cleanupConnections();
+                    state.role = null;
+                    this.showView('view-home');
+                }
+            },
+
+            handleRoleSwitchClick() {
+                if (state.role === 'anak') {
+                    this.openPinModal(() => {
+                        this.startSession('ortu');
+                    });
+                } else {
+                    this.startSession('anak');
+                }
+            },
+
+            openPinModal(callback) {
+                state.pinActionCallback = callback;
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-error').classList.add('hidden');
+                document.getElementById('pin-modal').classList.remove('hidden');
+                setTimeout(() => document.getElementById('pin-input').focus(), 100);
+            },
+
+            closePinModal() {
+                document.getElementById('pin-modal').classList.add('hidden');
+                state.pinActionCallback = null;
+            },
+
+            verifyPin() {
+                const entered = document.getElementById('pin-input').value.trim();
+                if (entered === PARENT_PIN) {
+                    const cb = state.pinActionCallback;
+                    this.closePinModal();
+                    if (cb) cb();
+                } else {
+                    document.getElementById('pin-error').classList.remove('hidden');
+                }
+            },
+
+            // =====================================================================
+            // KONEKSI PEERJS + BROADCASTCHANNEL + LOCALSTORAGE
+            // =====================================================================
+            cleanupConnections() {
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+                if (state.reconnectTimer) {
+                    clearInterval(state.reconnectTimer);
+                    state.reconnectTimer = null;
+                }
+                if (state.parentConn) {
+                    try { state.parentConn.close(); } catch (e) {}
+                    state.parentConn = null;
+                }
+                state.connections.forEach(conn => {
+                    try { conn.close(); } catch (e) {}
+                });
+                state.connections = [];
+                if (state.peer) {
+                    try { state.peer.destroy(); } catch (e) {}
+                    state.peer = null;
+                }
+                if (state.broadcastChannel) {
+                    try { state.broadcastChannel.close(); } catch (e) {}
+                    state.broadcastChannel = null;
+                }
+                state.isPeerConnected = false;
+            },
+
+            updateConnectionUI(connected, labelText) {
+                state.isPeerConnected = connected;
+                const badge = document.getElementById('conn-badge');
+                const dot = document.getElementById('conn-dot');
+                const text = document.getElementById('conn-text');
+
+                if (connected) {
+                    badge.className = 'bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-emerald-800';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping';
+                } else {
+                    badge.className = 'bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-amber-800';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse';
+                }
+                text.textContent = labelText;
+
+                if (state.role === 'ortu') {
+                    const ping = document.getElementById('parent-live-ping');
+                    const pDot = document.getElementById('parent-live-dot');
+                    const pill = document.getElementById('parent-status-pill');
+
+                    if (connected) {
+                        ping.classList.remove('hidden');
+                        pDot.className = 'absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full';
+                        pill.className = 'bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full';
+                        pill.textContent = '● TERHUBUNG REAL-TIME';
+                    } else {
+                        ping.classList.add('hidden');
+                        pDot.className = 'absolute -top-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full';
+                        pill.className = 'bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full';
+                        pill.textContent = '● MENUNGGU TAB ANAK ONLINE';
+                    }
+                }
+            },
+
+            canUseExternalWebSocket() {
+                try {
+                    if (window.self !== window.top && window.location.protocol === 'about:') {
+                        return false;
+                    }
+                    return typeof WebSocket !== 'undefined';
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            initChildPeerHost(room) {
+                const hostPeerId = `paket9-sd1-${room.toLowerCase()}-anak`;
+                this.updateConnectionUI(false, 'Menyiapkan Koneksi Sesi...');
+
+                if (typeof Peer === 'undefined' || !this.canUseExternalWebSocket()) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                    return;
+                }
+
+                try {
+                    const peer = new Peer(hostPeerId, { debug: 0 });
+                    state.peer = peer;
+
+                    peer.on('open', () => {
+                        this.updateConnectionUI(false, 'Siap Dipantau Orang Tua');
+                    });
+
+                    peer.on('connection', (conn) => {
+                        state.connections.push(conn);
+
+                        conn.on('open', () => {
+                            this.updateConnectionUI(true, 'Terhubung Real-Time ke HP Orang Tua');
+                            showToast('👩🏻‍💼👨🏽‍💼 Orang Tua terhubung memantau!');
+                            conn.send({
+                                type: 'SYNC_STATE',
+                                payload: state.sessionData
+                            });
+                        });
+
+                        conn.on('data', (msg) => {
+                            this.handleIncomingMessage(msg, conn);
+                        });
+
+                        conn.on('close', () => {
+                            state.connections = state.connections.filter(c => c !== conn);
+                            if (state.connections.length === 0) {
+                                this.updateConnectionUI(false, 'Siap Dipantau Orang Tua');
+                            }
+                        });
+                    });
+
+                    peer.on('error', (err) => {
+                        if (err && err.type === 'unavailable-id') {
+                            try {
+                                const fallbackPeer = new Peer(undefined, { debug: 0 });
+                                state.peer = fallbackPeer;
+                            } catch (e) {}
+                        }
+                        this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                    });
+                } catch (e) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                }
+            },
+
+            initParentPeerClient(room) {
+                const targetHostId = `paket9-sd1-${room.toLowerCase()}-anak`;
+                this.updateConnectionUI(false, 'Menunggu Perangkat Anak Online...');
+
+                if (typeof Peer === 'undefined' || !this.canUseExternalWebSocket()) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                    return;
+                }
+
+                try {
+                    const peer = new Peer(undefined, { debug: 0 });
+                    state.peer = peer;
+
+                    const connectToChild = () => {
+                        if (!state.peer || state.peer.destroyed || state.role !== 'ortu') return;
+                        if (state.parentConn && state.parentConn.open) return;
+
+                        if (state.parentConn) {
+                            try { state.parentConn.close(); } catch (e) {}
+                        }
+
+                        try {
+                            const conn = peer.connect(targetHostId, { reliable: true });
+                            state.parentConn = conn;
+
+                            conn.on('open', () => {
+                                this.updateConnectionUI(true, 'Terhubung Real-Time ke Tab Anak');
+                                showToast('✅ Terhubung langsung ke perangkat anak!');
+                                const activeSubj = state.sessionData.subjectId || state.selectedSubject;
+                                if (activeSubj) {
+                                    conn.send({
+                                        type: 'CHANGE_SUBJECT',
+                                        subjectId: activeSubj,
+                                        timestamp: Date.now()
+                                    });
+                                } else {
+                                    conn.send({ type: 'REQUEST_SYNC' });
+                                }
+                            });
+
+                            conn.on('data', (msg) => {
+                                this.handleIncomingMessage(msg, conn);
+                            });
+
+                            conn.on('close', () => {
+                                this.updateConnectionUI(false, 'Menunggu Perangkat Anak Online...');
+                            });
+
+                            conn.on('error', () => {
+                                this.updateConnectionUI(false, 'Menunggu Perangkat Anak Online...');
+                            });
+                        } catch (e) {
+                            this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                        }
+                    };
+
+                    peer.on('open', () => {
+                        connectToChild();
+                        state.reconnectTimer = setInterval(connectToChild, 3000);
+                    });
+
+                    peer.on('error', () => {
+                        this.updateConnectionUI(false, 'Sesi Lokal Aktif');
+                    });
+                } catch (e) {
+                    this.updateConnectionUI(true, 'Mode Pratinjau / Lokal Aktif');
+                }
+            },
+
+            loadOrCreateSubjectSession(room, subjId, childName) {
+                const saved = loadLocalSession(room, subjId);
+                if (saved && saved.roomCode === room && saved.subjectId === subjId) {
+                    saved.childName = DEFAULT_CHILD_NAME;
+                    return saved;
+                }
+                const fresh = {
+                    subjectId: subjId,
+                    roomCode: room,
+                    childName: childName || DEFAULT_CHILD_NAME,
+                    activeQuestionIndex: 0,
+                    answers: {},
+                    score: 0,
+                    correctCount: 0,
+                    wrongCount: 0,
+                    helpRequest: null,
+                    updatedAt: Date.now()
+                };
+                saveLocalSession(room, subjId, fresh);
+                return fresh;
+            },
+
+            startSession(role) {
+                this.cleanupConnections();
+                const { room, name, subject } = this.getCurrentFormValues();
+                state.roomCode = room;
+                state.role = role;
+                state.childName = name;
+
+                state.sessionData = this.loadOrCreateSubjectSession(room, subject, name);
+
+                try {
+                    state.broadcastChannel = new BroadcastChannel(`paket9_bc_${room}`);
+                    state.broadcastChannel.onmessage = (event) => {
+                        this.handleIncomingMessage(event.data, null);
+                    };
+                } catch (e) {}
+
+                window.onstorage = (e) => {
+                    if (state.role === 'anak' && e.key === `paket9_active_subj_${room}` && e.newValue) {
+                        try {
+                            const cmd = JSON.parse(e.newValue);
+                            if (cmd && cmd.subjectId) {
+                                this.applySubjectChangeOnChild(cmd.subjectId, true);
+                            }
+                        } catch (err) {}
+                        return;
+                    }
+                    const activeSubj = state.sessionData.subjectId || state.selectedSubject;
+                    if (e.key === getStorageKey(room, activeSubj) && e.newValue) {
+                        try {
+                            const updated = JSON.parse(e.newValue);
+                            state.sessionData = updated;
+                            if (state.role === 'anak') this.renderChildView();
+                            if (state.role === 'ortu') this.renderParentView();
+                        } catch (err) {}
+                    }
+                };
+
+                if (role === 'anak') {
+                    try {
+                        const forcedSubjRaw = localStorage.getItem(`paket9_active_subj_${room}`);
+                        if (forcedSubjRaw) {
+                            const forced = JSON.parse(forcedSubjRaw);
+                            if (forced && forced.subjectId && SUBJECT_QUESTIONS[forced.subjectId]) {
+                                state.selectedSubject = forced.subjectId;
+                                state.sessionData = this.loadOrCreateSubjectSession(room, forced.subjectId, name);
+                            }
+                        }
+                    } catch (e) {}
+                    this.showView('view-child');
+                    this.renderChildView();
+                    this.initChildPeerHost(room);
+                } else {
+                    try {
+                        localStorage.setItem(`paket9_active_subj_${room}`, JSON.stringify({
+                            subjectId: subject,
+                            timestamp: Date.now()
+                        }));
+                    } catch (e) {}
+                    this.showView('view-parent');
+                    this.renderParentView();
+                    this.initParentPeerClient(room);
+                }
+            },
+
+            broadcastChildState() {
+                const subjId = state.sessionData.subjectId || state.selectedSubject;
+                state.sessionData.updatedAt = Date.now();
+                saveLocalSession(state.roomCode, subjId, state.sessionData);
+
+                const packet = {
+                    type: 'SYNC_STATE',
+                    payload: state.sessionData
+                };
+
+                state.connections.forEach(conn => {
+                    if (conn && conn.open) {
+                        try { conn.send(packet); } catch (e) {}
+                    }
+                });
+
+                if (state.broadcastChannel) {
+                    try { state.broadcastChannel.postMessage(packet); } catch (e) {}
+                }
+            },
+
+            sendCommandToChild(packet) {
+                let sentViaPeer = false;
+                if (state.parentConn && state.parentConn.open) {
+                    try {
+                        state.parentConn.send(packet);
+                        sentViaPeer = true;
+                    } catch (e) {}
+                }
+                if (state.broadcastChannel) {
+                    try { state.broadcastChannel.postMessage(packet); } catch (e) {}
+                }
+                if (packet && packet.type === 'CHANGE_SUBJECT' && packet.subjectId) {
+                    try {
+                        localStorage.setItem(`paket9_active_subj_${state.roomCode}`, JSON.stringify({
+                            subjectId: packet.subjectId,
+                            timestamp: packet.timestamp || Date.now()
+                        }));
+                    } catch (e) {}
+                }
+                return sentViaPeer;
+            },
+
+            applySubjectChangeOnChild(newSubjId, notify = true) {
+                if (!newSubjId || !SUBJECT_QUESTIONS[newSubjId]) return;
+                if (state.sessionData.subjectId === newSubjId && state.selectedSubject === newSubjId) return;
+
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+                state.selectedSubject = newSubjId;
+                state.sessionData = this.loadOrCreateSubjectSession(state.roomCode, newSubjId, state.sessionData.childName);
+                state.celebrationShown = false;
+                this.closeCelebrationModal();
+                this.showView('view-child');
+                this.renderChildView();
+                this.broadcastChildState();
+
+                if (notify) {
+                    const meta = getSubjectMeta(newSubjId);
+                    showToast(`📚 Orang tua memilihkan mapel ${meta.name}!`);
+                }
+            },
+
+            handleIncomingMessage(msg, conn) {
+                if (!msg || !msg.type) return;
+
+                if (state.role === 'anak') {
+                    if (msg.type === 'REQUEST_SYNC' && conn && conn.open) {
+                        conn.send({ type: 'SYNC_STATE', payload: state.sessionData });
+                    } else if (msg.type === 'STICKER') {
+                        document.getElementById('modal-sticker-emoji').textContent = msg.emoji || '🌟';
+                        document.getElementById('modal-sticker-text').textContent = msg.message || 'Semangat!';
+                        document.getElementById('encouragement-modal').classList.remove('hidden');
+                        soundFX.playFanfare();
+                    } else if (msg.type === 'RESET_ALL') {
+                        this.executeResetOnChild();
+                        showToast('🔄 Orang tua mereset latihan soal ini dari awal.');
+                    } else if (msg.type === 'CHANGE_SUBJECT' && msg.subjectId) {
+                        this.applySubjectChangeOnChild(msg.subjectId, true);
+                    }
+                } else if (state.role === 'ortu') {
+                    if (msg.type === 'SYNC_STATE' && msg.payload) {
+                        const currentParentSubj = state.sessionData.subjectId || state.selectedSubject;
+                        if (msg.payload.subjectId && msg.payload.subjectId !== currentParentSubj) {
+                            this.sendCommandToChild({
+                                type: 'CHANGE_SUBJECT',
+                                subjectId: currentParentSubj,
+                                timestamp: Date.now()
+                            });
+                            return;
+                        }
+                        const prevHelpTs = state.sessionData.helpRequest?.timestamp || 0;
+                        state.sessionData = msg.payload;
+                        state.selectedSubject = msg.payload.subjectId || state.selectedSubject;
+                        saveLocalSession(state.roomCode, state.selectedSubject, state.sessionData);
+                        this.showView('view-parent');
+                        this.renderParentView();
+
+                        const newHelp = state.sessionData.helpRequest;
+                        if (newHelp && newHelp.timestamp > prevHelpTs) {
+                            soundFX.playAlert();
+                            const banner = document.getElementById('parent-help-banner');
+                            document.getElementById('parent-help-detail').textContent =
+                                `${state.sessionData.childName} meminta bantuan pada Soal #${newHelp.questionNumber}!`;
+                            banner.classList.remove('hidden');
+                        }
+                    }
+                }
+            },
+
+            // =====================================================================
+            // MODE ANAK (FOKUS 1 KARTU SOAL, SEKALI PILIH OTOMATIS LANJUT)
+            // =====================================================================
+            renderChildView() {
+                const data = state.sessionData;
+                const questions = getActiveQuestions();
+                const meta = getSubjectMeta(data.subjectId || state.selectedSubject);
+
+                document.getElementById('child-subject-icon').textContent = meta.icon;
+                document.getElementById('child-subject-title').textContent = `${meta.num}. ${meta.name}`;
+                document.getElementById('child-display-name').textContent = DEFAULT_CHILD_NAME;
+
+                const answersMap = data.answers || {};
+                const answeredCount = Object.keys(answersMap).length;
+                const totalQ = questions.length;
+                const score = Math.round(((data.correctCount || 0) / totalQ) * 100);
+
+                document.getElementById('child-answered-progress').textContent = `Terjawab: ${answeredCount} dari ${totalQ} soal`;
+                document.getElementById('child-score-badge').textContent = `⭐ Nilai: ${score}`;
+                document.getElementById('child-progress-bar').style.width = `${Math.round((answeredCount / totalQ) * 100)}%`;
+
+                if (answeredCount === 0) {
+                    state.celebrationShown = false;
+                }
+
+                const finishContainer = document.getElementById('child-finish-container');
+                if (answeredCount === totalQ) {
+                    finishContainer.classList.remove('hidden');
+                    if (!state.celebrationShown) {
+                        state.celebrationShown = true;
+                        this.openCelebrationModal();
+                    }
+                } else {
+                    finishContainer.classList.add('hidden');
+                }
+
+                const qIdx = data.activeQuestionIndex || 0;
+                const q = questions[qIdx];
+                if (!q) return;
+
+                document.getElementById('q-category').textContent = q.category;
+                document.getElementById('q-number-badge').textContent = `Soal ${qIdx + 1} / ${totalQ}`;
+                document.getElementById('q-visual').textContent = q.visual;
+                document.getElementById('q-text').textContent = q.question;
+
+                const savedAns = answersMap[String(qIdx)];
+                const optionsContainer = document.getElementById('q-options');
+                optionsContainer.innerHTML = '';
+
+                const labels = ['A', 'B', 'C'];
+                const baseStyles = [
+                    'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-950',
+                    'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-950',
+                    'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-950'
+                ];
+
+                q.options.forEach((optText, optIdx) => {
+                    const btn = document.createElement('button');
+                    let styleClass = baseStyles[optIdx];
+
+                    if (savedAns) {
+                        btn.disabled = true;
+                        if (optIdx === q.correctIndex) {
+                            styleClass = 'bg-emerald-500 border-emerald-600 text-white ring-4 ring-emerald-200 cursor-not-allowed';
+                        } else if (optIdx === savedAns.selectedIndex && !savedAns.isCorrect) {
+                            styleClass = 'bg-rose-500 border-rose-600 text-white cursor-not-allowed';
+                        } else {
+                            styleClass = 'bg-slate-50 border-slate-200 text-slate-400 opacity-65 cursor-not-allowed';
+                        }
+                    } else {
+                        btn.onclick = () => this.selectChildOption(qIdx, optIdx);
+                    }
+
+                    btn.className = `btn-3d w-full p-4 sm:p-5 rounded-2xl border-2 font-kids text-lg sm:text-xl font-bold flex items-center gap-4 text-left transition ${styleClass}`;
+
+                    btn.innerHTML = `
+                        <span class="w-10 h-10 rounded-xl bg-white/90 text-slate-800 flex items-center justify-center text-lg font-extrabold shrink-0 shadow-xs">
+                            ${labels[optIdx]}
+                        </span>
+                        <span class="leading-snug flex-grow">${optText}</span>
+                        ${savedAns ? '<span class="text-xs bg-black/15 px-2.5 py-1 rounded-lg font-sans font-bold shrink-0">🔒 Terkunci</span>' : ''}
+                    `;
+                    optionsContainer.appendChild(btn);
+                });
+
+                const feedbackBox = document.getElementById('child-feedback-box');
+                const autoNextHint = document.getElementById('feedback-auto-next');
+                if (savedAns) {
+                    feedbackBox.classList.remove('hidden');
+                    if (savedAns.isCorrect) {
+                        feedbackBox.className = 'mt-5 p-4 rounded-2xl text-center animate-pop bg-emerald-50 border-2 border-emerald-200 text-emerald-800';
+                        document.getElementById('feedback-icon').textContent = '🌟';
+                        document.getElementById('feedback-title').textContent = 'Hebat! Jawabanmu Benar!';
+                        document.getElementById('feedback-desc').textContent = q.explanation;
+                    } else {
+                        feedbackBox.className = 'mt-5 p-4 rounded-2xl text-center animate-pop bg-rose-50 border-2 border-rose-200 text-rose-800';
+                        document.getElementById('feedback-icon').textContent = '💡';
+                        document.getElementById('feedback-title').textContent = `Jawaban yang tepat: ${labels[q.correctIndex]}. ${q.options[q.correctIndex]}`;
+                        document.getElementById('feedback-desc').textContent = q.explanation;
+                    }
+                    if (state.autoNextTimer) {
+                        autoNextHint.classList.remove('hidden');
+                    } else {
+                        autoNextHint.classList.add('hidden');
+                    }
+                } else {
+                    feedbackBox.classList.add('hidden');
+                    autoNextHint.classList.add('hidden');
+                }
+            },
+
+            selectChildOption(qIdx, selectedIdx) {
+                const answers = { ...(state.sessionData.answers || {}) };
+                if (answers[String(qIdx)]) return;
+
+                const questions = getActiveQuestions();
+                const q = questions[qIdx];
+                const isCorrect = selectedIdx === q.correctIndex;
+
+                if (isCorrect) soundFX.playCorrect();
+                else soundFX.playWrong();
+
+                answers[String(qIdx)] = {
+                    selectedIndex: selectedIdx,
+                    isCorrect: isCorrect,
+                    timestamp: Date.now()
+                };
+
+                let correctCount = 0;
+                let wrongCount = 0;
+                Object.values(answers).forEach(item => {
+                    if (item.isCorrect) correctCount++;
+                    else wrongCount++;
+                });
+
+                state.sessionData.answers = answers;
+                state.sessionData.correctCount = correctCount;
+                state.sessionData.wrongCount = wrongCount;
+                state.sessionData.score = Math.round((correctCount / questions.length) * 100);
+                state.sessionData.activeQuestionIndex = qIdx;
+
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+
+                const totalQ = questions.length;
+                if (Object.keys(answers).length < totalQ) {
+                    state.autoNextTimer = setTimeout(() => {
+                        state.autoNextTimer = null;
+                        let nextUnanswered = -1;
+                        for (let i = qIdx + 1; i < totalQ; i++) {
+                            if (!state.sessionData.answers[String(i)]) {
+                                nextUnanswered = i;
+                                break;
+                            }
+                        }
+                        if (nextUnanswered === -1) {
+                            for (let i = 0; i < totalQ; i++) {
+                                if (!state.sessionData.answers[String(i)]) {
+                                    nextUnanswered = i;
+                                    break;
+                                }
+                            }
+                        }
+                        if (nextUnanswered !== -1) {
+                            this.jumpToQuestion(nextUnanswered);
+                        }
+                    }, 1100);
+                }
+
+                this.renderChildView();
+                this.broadcastChildState();
+            },
+
+            jumpToQuestion(idx) {
+                if (state.autoNextTimer) {
+                    clearTimeout(state.autoNextTimer);
+                    state.autoNextTimer = null;
+                }
+                state.sessionData.activeQuestionIndex = idx;
+                this.renderChildView();
+                this.broadcastChildState();
+            },
+
+            sendHelpRequest() {
+                soundFX.playAlert();
+                const currentQNum = (state.sessionData.activeQuestionIndex || 0) + 1;
+                state.sessionData.helpRequest = {
+                    questionNumber: currentQNum,
+                    timestamp: Date.now()
+                };
+                this.broadcastChildState();
+                showToast(`🙋‍♂️ Permintaan bantuan untuk Soal #${currentQNum} dikirim ke Orang Tua!`);
+            },
+
+            executeResetOnChild() {
+                state.sessionData.activeQuestionIndex = 0;
+                state.sessionData.answers = {};
+                state.sessionData.score = 0;
+                state.sessionData.correctCount = 0;
+                state.sessionData.wrongCount = 0;
+                state.sessionData.helpRequest = null;
+                state.celebrationShown = false;
+                this.closeCelebrationModal();
+                this.renderChildView();
+                this.broadcastChildState();
+            },
+
+            openCelebrationModal() {
+                const questions = getActiveQuestions();
+                const meta = getSubjectMeta(state.sessionData.subjectId || state.selectedSubject);
+                const correct = state.sessionData.correctCount || 0;
+                const score = Math.round((correct / questions.length) * 100);
+                document.getElementById('celeb-subtitle').textContent = `Kamu telah menyelesaikan semua 30 soal ${meta.name}!`;
+                document.getElementById('celeb-score').textContent = score;
+                document.getElementById('celeb-detail').textContent = `Benar ${correct} dari ${questions.length} soal ${meta.name}`;
+                document.getElementById('celebration-modal').classList.remove('hidden');
+                soundFX.playFanfare();
+            },
+
+            closeCelebrationModal() {
+                document.getElementById('celebration-modal').classList.add('hidden');
+            },
+
+            closeEncouragementModal() {
+                document.getElementById('encouragement-modal').classList.add('hidden');
+            },
+
+            // =====================================================================
+            // MODE ORANG TUA (REAL-TIME DASHBOARD)
+            // =====================================================================
+            renderAllSubjectsRecap() {
+                const container = document.getElementById('parent-all-subjects-recap');
+                if (!container) return;
+
+                const room = state.roomCode;
+                const activeSubjId = state.sessionData.subjectId || state.selectedSubject;
+                document.getElementById('recap-room-code').textContent = room;
+
+                container.innerHTML = '';
+                let totalScoreStarted = 0;
+                let startedSubjectsCount = 0;
+
+                SUBJECT_LIST.forEach(subj => {
+                    const subjData = subj.id === activeSubjId
+                        ? state.sessionData
+                        : loadLocalSession(room, subj.id);
+
+                    const totalQ = (SUBJECT_QUESTIONS[subj.id] || []).length || 30;
+                    const answersMap = (subjData && subjData.answers) ? subjData.answers : {};
+                    const answeredCount = Object.keys(answersMap).length;
+                    const correctCount = (subjData && subjData.correctCount) ? subjData.correctCount : 0;
+                    const wrongCount = (subjData && subjData.wrongCount) ? subjData.wrongCount : 0;
+                    const score = Math.round((correctCount / totalQ) * 100);
+                    const isCompleted = answeredCount === totalQ && totalQ > 0;
+                    const isCurrent = subj.id === activeSubjId;
+
+                    if (answeredCount > 0) {
+                        totalScoreStarted += score;
+                        startedSubjectsCount++;
+                    }
+
+                    let statusBadge = '<span class="bg-slate-100 text-slate-500 text-[11px] font-bold px-2 py-0.5 rounded-full">Belum Dikerjakan</span>';
+                    let scoreColor = 'text-slate-400';
+                    let cardBorder = 'border-slate-200 bg-slate-50/50';
+
+                    if (isCompleted) {
+                        statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[11px] font-extrabold px-2 py-0.5 rounded-full">🏆 Selesai (30/30)</span>';
+                        scoreColor = score >= 75 ? 'text-emerald-600' : 'text-amber-600';
+                        cardBorder = 'border-emerald-200 bg-emerald-50/30';
+                    } else if (answeredCount > 0) {
+                        statusBadge = `<span class="bg-amber-100 text-amber-800 text-[11px] font-bold px-2 py-0.5 rounded-full">⏳ Proses (${answeredCount}/${totalQ})</span>`;
+                        scoreColor = 'text-amber-600';
+                        cardBorder = 'border-amber-200 bg-amber-50/30';
+                    }
+
+                    if (isCurrent) {
+                        cardBorder += ' ring-2 ring-indigo-300';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `p-4 rounded-2xl border-2 ${cardBorder} flex flex-col justify-between gap-2.5 transition cursor-pointer hover:shadow-sm`;
+                    card.onclick = () => this.changeSubjectFromParent(subj.id);
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-2xl shrink-0">${subj.icon}</span>
+                                <div class="min-w-0">
+                                    <p class="font-kids font-bold text-sm sm:text-base text-slate-800 truncate">${subj.num}. ${subj.name}</p>
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Nilai</p>
+                                <p class="font-kids text-2xl font-bold ${scoreColor} leading-none">${score}</p>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs font-bold text-slate-600">
+                            <span>✅ Benar: <b class="text-emerald-600">${correctCount}</b> • ❌ Salah: <b class="text-rose-500">${wrongCount}</b></span>
+                            <span class="text-indigo-600 hover:underline text-[11px]">Lihat →</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                const avg = startedSubjectsCount > 0 ? Math.round(totalScoreStarted / startedSubjectsCount) : 0;
+                document.getElementById('recap-average-score').textContent = `${avg} / 100`;
+            },
+
+            changeSubjectFromParent(newSubjId) {
+                if (!SUBJECT_QUESTIONS[newSubjId]) return;
+                state.selectedSubject = newSubjId;
+                state.sessionData = this.loadOrCreateSubjectSession(state.roomCode, newSubjId, state.sessionData.childName);
+                this.showView('view-parent');
+                this.renderParentView();
+                this.dismissHelpBanner();
+
+                this.sendCommandToChild({
+                    type: 'CHANGE_SUBJECT',
+                    subjectId: newSubjId,
+                    timestamp: Date.now()
+                });
+                const meta = getSubjectMeta(newSubjId);
+                showToast(`📚 Mata pelajaran diganti ke ${meta.name}!`);
+            },
+
+            setParentFilter(filterType) {
+                state.parentFilter = filterType;
+                const buttons = {
+                    all: 'filter-all',
+                    wrong: 'filter-wrong',
+                    correct: 'filter-correct',
+                    unanswered: 'filter-unanswered'
+                };
+                Object.entries(buttons).forEach(([key, id]) => {
+                    const el = document.getElementById(id);
+                    if (key === filterType) {
+                        el.className = key === 'wrong'
+                            ? 'px-3 py-1.5 rounded-lg bg-rose-600 text-white'
+                            : 'px-3 py-1.5 rounded-lg bg-slate-800 text-white';
+                    } else {
+                        el.className = 'px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200';
+                    }
+                });
+                this.renderParentView();
+            },
+
+            dismissHelpBanner() {
+                document.getElementById('parent-help-banner').classList.add('hidden');
+            },
+
+            renderParentView() {
+                const data = state.sessionData;
+                const subjId = data.subjectId || state.selectedSubject;
+                const meta = getSubjectMeta(subjId);
+                const questions = getActiveQuestions();
+
+                document.getElementById('parent-subject-dropdown').value = subjId;
+                document.getElementById('parent-subject-icon').textContent = meta.icon;
+                document.getElementById('parent-subject-name').textContent = `${meta.num}. ${meta.name}`;
+                document.getElementById('parent-list-heading').textContent = `Rincian 30 Soal ${meta.name} (Live)`;
+
+                document.getElementById('parent-child-name').textContent = DEFAULT_CHILD_NAME;
+                document.getElementById('parent-code-text').textContent = data.roomCode;
+                document.getElementById('parent-last-update').textContent = formatTime(data.updatedAt);
+
+                const answersMap = data.answers || {};
+                const answeredCount = Object.keys(answersMap).length;
+                const correctCount = data.correctCount || 0;
+                const wrongCount = data.wrongCount || 0;
+                const totalQ = questions.length;
+                const score = Math.round((correctCount / totalQ) * 100);
+                const activeIdx = data.activeQuestionIndex || 0;
+
+                document.getElementById('stat-score').textContent = score;
+                document.getElementById('stat-progress').textContent = `${answeredCount} / ${totalQ}`;
+                document.getElementById('stat-correct').textContent = correctCount;
+                document.getElementById('stat-wrong').textContent = wrongCount;
+                document.getElementById('stat-active-q').textContent = `No. ${activeIdx + 1}`;
+
+                if (answeredCount === totalQ) {
+                    document.getElementById('parent-live-activity').textContent = `🏆 Selesai mengerjakan semua 30 soal ${meta.name}! Nilai Akhir: ${score}`;
+                } else {
+                    document.getElementById('parent-live-activity').textContent = `Sedang mengerjakan Soal #${activeIdx + 1} (${questions[activeIdx]?.category || ''})`;
+                }
+
+                const listContainer = document.getElementById('parent-answers-list');
+                listContainer.innerHTML = '';
+
+                const labels = ['A', 'B', 'C'];
+                let shownCount = 0;
+
+                questions.forEach((q, idx) => {
+                    const ans = answersMap[String(idx)];
+
+                    if (state.parentFilter === 'wrong' && (!ans || ans.isCorrect)) return;
+                    if (state.parentFilter === 'correct' && (!ans || !ans.isCorrect)) return;
+                    if (state.parentFilter === 'unanswered' && ans) return;
+                    shownCount++;
+
+                    const isOpened = activeIdx === idx && answeredCount < totalQ;
+                    const correctLabel = `${labels[q.correctIndex]}. ${q.options[q.correctIndex]}`;
+                    let cardStyle = 'border-slate-100 bg-slate-50/40';
+                    let badgeHtml = '<span class="bg-slate-200 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">Belum Dijawab</span>';
+                    let childChoiceHtml = '<span class="text-slate-400 italic">Pilihan anak: Belum dijawab</span>';
+
+                    if (ans) {
+                        const chosenLabel = `${labels[ans.selectedIndex]}. ${q.options[ans.selectedIndex]}`;
+
+                        if (ans.isCorrect) {
+                            cardStyle = 'border-emerald-200 bg-emerald-50/40';
+                            badgeHtml = '<span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">✅ Benar</span>';
+                            childChoiceHtml = `<span class="text-emerald-700 font-bold">Pilihan anak: ${chosenLabel}</span>`;
+                        } else {
+                            cardStyle = 'border-rose-200 bg-rose-50/40';
+                            badgeHtml = '<span class="bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">❌ Salah</span>';
+                            childChoiceHtml = `<span class="text-rose-600 font-bold">Pilihan anak: ${chosenLabel}</span>`;
+                        }
+                    } else if (isOpened) {
+                        cardStyle = 'border-indigo-300 bg-indigo-50 ring-2 ring-indigo-100';
+                        badgeHtml = '<span class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full animate-pulse">👀 Sedang Dibuka</span>';
+                    }
+
+                    const row = document.createElement('div');
+                    row.className = `p-3.5 sm:p-4 rounded-2xl border-2 ${cardStyle} flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition`;
+                    row.innerHTML = `
+                        <div class="space-y-1.5">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-kids font-bold text-sm text-slate-800 bg-white px-2 py-0.5 rounded-lg border border-slate-200">#${idx + 1}</span>
+                                <span class="text-xs font-bold text-indigo-700">${q.category}</span>
+                            </div>
+                            <p class="text-sm font-bold text-slate-800">${q.question}</p>
+                            <div class="flex flex-wrap items-center gap-2 text-xs">
+                                ${childChoiceHtml}
+                                <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-lg">
+                                    ✓ Kunci Jawaban Benar: ${correctLabel}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="shrink-0 self-start sm:self-center">
+                            ${badgeHtml}
+                        </div>
+                    `;
+                    listContainer.appendChild(row);
+                });
+
+                if (shownCount === 0) {
+                    listContainer.innerHTML = `
+                        <div class="text-center py-8 text-slate-400 text-sm font-bold">
+                            Tidak ada soal pada kategori filter ini.
+                        </div>
+                    `;
+                }
+
+                this.renderAllSubjectsRecap();
+            },
+
+            sendEncouragement(message, emoji) {
+                this.sendCommandToChild({
+                    type: 'STICKER',
+                    message: message,
+                    emoji: emoji,
+                    timestamp: Date.now()
+                });
+                const badge = document.getElementById('sticker-sent-badge');
+                badge.classList.remove('hidden');
+                setTimeout(() => badge.classList.add('hidden'), 2500);
+            },
+
+            confirmResetSession() {
+                const btn = document.getElementById('custom-modal-confirm-btn');
+                btn.onclick = () => {
+                    this.closeCustomModal();
+                    this.triggerRemoteReset();
+                };
+                document.getElementById('custom-modal').classList.remove('hidden');
+            },
+
+            closeCustomModal() {
+                document.getElementById('custom-modal').classList.add('hidden');
+            },
+
+            triggerRemoteReset() {
+                const subjId = state.sessionData.subjectId || state.selectedSubject;
+                state.sessionData.activeQuestionIndex = 0;
+                state.sessionData.answers = {};
+                state.sessionData.score = 0;
+                state.sessionData.correctCount = 0;
+                state.sessionData.wrongCount = 0;
+                state.sessionData.helpRequest = null;
+                state.sessionData.updatedAt = Date.now();
+                saveLocalSession(state.roomCode, subjId, state.sessionData);
+                this.renderParentView();
+                this.dismissHelpBanner();
+
+                this.sendCommandToChild({ type: 'RESET_ALL', timestamp: Date.now() });
+                showToast('🔄 Perintah reset dikirim ke layar anak!');
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            app.init();
+            document.getElementById('pin-input').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') app.verifyPin();
+            });
+        });
+    </script>
+</body>
+</html>
